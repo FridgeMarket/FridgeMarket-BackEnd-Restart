@@ -1,40 +1,66 @@
-CREATE DATABASE IF NOT EXISTS FridgeMarket CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE FridgeMarket;
-
--- 회원가입 테이블
-CREATE TABLE Users (
-	ID VARCHAR(40) NOT NULL,
-    PW VARCHAR(100) NOT NULL,
-    UserName VARCHAR(20) NOT NULL,
-    PhoneNum VARCHAR(30) NOT NULL,
-    UserNum INT(500) NOT NULL PRIMARY KEY
+-- 사용자 테이블
+CREATE TABLE User (
+                      User_id VARCHAR(100) PRIMARY KEY,
+                      name VARCHAR(20),
+                      nickname VARCHAR(20) UNIQUE,
+                      phone VARCHAR(30) UNIQUE,
+                      email VARCHAR(50) UNIQUE,
+                      address VARCHAR(200),
+                      agreed BOOLEAN
 );
 
--- 게시판 테이블
-CREATE TABLE Board (
-	Title VARCHAR(500) NOT NULL,
-    Detail VARCHAR(2000) NOT NULL,
-    BoardNum INT(500) NOT NULL PRIMARY KEY,
-    UserNum INT(500) NOT NULL,
-    FOREIGN KEY (UserNum) REFERENCES Users(UserNum)
+-- 게시글 테이블
+CREATE TABLE Post (
+                      Post_num INT PRIMARY KEY AUTO_INCREMENT,
+                      User_id VARCHAR(100),
+                      tag VARCHAR(20),
+                      title VARCHAR(100),
+                      content VARCHAR(1000),
+                      expiration_date DATE,
+                      status BOOLEAN,
+                      created_at DATE,
+                      refridger_food VARCHAR(100), -- 냉장고 안 재료일 시 매핑, 아니면 NULL
+
+                      FOREIGN KEY (User_id) REFERENCES User(User_id),
+                      FOREIGN KEY (tag) REFERENCES Tag(tag)
 );
 
--- 댓글 테이블
-CREATE TABLE Comments (
-	CommentNum INT(500) NOT NULL PRIMARY KEY,
-    CommentContent VARCHAR(500) NOT NULL,
-    UserNum INT(500) NOT NULL,
-    BoardNum INT(500) NOT NULL,
-    FOREIGN KEY (UserNum) REFERENCES Users(UserNum),
-    FOREIGN KEY (BoardNum) REFERENCES Board(BoardNum)
+-- 태그 테이블
+CREATE TABLE Tag (
+                     tag VARCHAR(20) PRIMARY KEY -- 나눔 진행중 / 나눔 완료
+);
+
+-- 쪽지 테이블
+CREATE TABLE Chat (
+                      chat_num INT PRIMARY KEY AUTO_INCREMENT,
+                      User_id VARCHAR(100),
+                      content VARCHAR(1000),
+                      send_time DATE,
+
+                      FOREIGN KEY (User_id) REFERENCES User(User_id)
 );
 
 -- 냉장고 테이블
 CREATE TABLE Refrigerator (
-	FoodNum INT(500) NOT NULL PRIMARY KEY,
-    DateBeforeOpening DATE NOT NULL,
-    DateAfterOpening DATE NOT NULL,
-    FoodName VARCHAR(200) NOT NULL,
-    UserNum INT(500) NOT NULL,
-    FOREIGN KEY (UserNum) REFERENCES Users(UserNum)
+                              fridge_num INT PRIMARY KEY AUTO_INCREMENT,
+                              User_id VARCHAR(100),
+                              food_name VARCHAR(100),
+                              category VARCHAR(20), -- 유제품, 채소, 육류 등
+                              quantity INT,
+                              is_opend BOOLEAN,
+                              expiration_date_before_open DATE,
+                              expiration_date_after_open DATE,
+                              registered_at DATE,
+
+                              FOREIGN KEY (User_id) REFERENCES User(User_id)
+);
+
+-- 신고 테이블
+CREATE TABLE Report (
+                        report_num INT PRIMARY KEY AUTO_INCREMENT,
+                        User_id VARCHAR(100),
+                        reason VARCHAR(1000),
+                        created_time DATE,
+
+                        FOREIGN KEY (User_id) REFERENCES User(User_id)
 );
