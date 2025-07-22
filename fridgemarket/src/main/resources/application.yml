@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/fridgemarket?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true # 전체 URL 포함
+    url: jdbc:mysql://localhost:3306/fridgemarket
     username: root
-    password: soojong9627
+    password: donghwan02
     driver-class-name: com.mysql.cj.jdbc.Driver # <-- 이 부분을 여기에 추가/확인!
   jpa:
     hibernate:
