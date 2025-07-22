@@ -1,6 +1,7 @@
 package com.fridgemarket.fridgemarket.controller;
 
 import com.fridgemarket.fridgemarket.DAO.User;
+import com.fridgemarket.fridgemarket.dto.KakaoTokenResponseDto;
 import com.fridgemarket.fridgemarket.service.KakaoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,8 +27,8 @@ public class KakaoLoginController {
 
     @GetMapping("/callback")
     public String callback(@RequestParam("code") String code, Model model) {
-        String accessToken = kakaoService.getAccessTokenFromKakao(code);
-        User user = kakaoService.loginWithKakao(accessToken);
+        KakaoTokenResponseDto kakaoTokenResponseDto = kakaoService.getTokenFromKakao(code);
+        User user = kakaoService.loginWithKakao(kakaoTokenResponseDto);
         model.addAttribute("user", user);
         return "redirect:/success";
     }

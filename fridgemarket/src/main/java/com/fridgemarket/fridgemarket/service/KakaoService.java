@@ -57,7 +57,7 @@ public class KakaoService {
      * @return 발급받은 액세스 토큰 문자열
      * @throws RuntimeException API 호출 실패 시 발생
      */
-    public String getAccessTokenFromKakao(String code) {
+    public KakaoTokenResponseDto getTokenFromKakao(String code) {
 
         KakaoTokenResponseDto kakaoTokenResponseDto = WebClient.create(KAUTH_TOKEN_URL_HOST).post()
                 .uri(uriBuilder -> uriBuilder
@@ -81,8 +81,9 @@ public class KakaoService {
         //제공 조건: OpenID Connect가 활성화 된 앱의 토큰 발급 요청인 경우 또는 scope에 openid를 포함한 추가 항목 동의 받기 요청을 거친 토큰 발급 요청인 경우
         log.info(" [Kakao Service] Id Token ------> {}", kakaoTokenResponseDto.getIdToken());
         log.info(" [Kakao Service] Scope ------> {}", kakaoTokenResponseDto.getScope());
+        log.info(" [Kakao Service] getTokenFromKakao - Returning KakaoTokenResponseDto with refreshToken: {}", kakaoTokenResponseDto.getRefreshToken());
 
-        return kakaoTokenResponseDto.getAccessToken();
+        return kakaoTokenResponseDto;
     }
 
     /**
@@ -119,11 +120,15 @@ public class KakaoService {
      * 카카오를 통한 로그인 또는 회원가입을 처리하는 메서드.
      * 액세스 토큰으로 사용자 정보를 조회한 후, 기존 사용자인지 확인하여 로그인 처리하거나
      * 신규 사용자인 경우 User 엔티티를 생성하여 저장합니다.
-     * @param accessToken 카카오 액세스 토큰
+     * @param kakaoTokenResponseDto 카카오 토큰 응답 DTO
      * @return 로그인 또는 회원가입된 User 엔티티
      */
     @Transactional
-    public User loginWithKakao(String accessToken) {
+    public User loginWithKakao(KakaoTokenResponseDto kakaoTokenResponseDto) {
+        String accessToken = kakaoTokenResponseDto.getAccessToken();
+        String refreshToken = kakaoTokenResponseDto.getRefreshToken();
+        log.info(" [Kakao Service] loginWithKakao - Received refreshToken: {}", refreshToken);
+
         // 1. 액세스 토큰으로 카카오 사용자 정보 조회
         KakaoUserInfoResponseDto userInfo = getUserInfo(accessToken);
         String provider = "kakao"; // 소셜 로그인 제공자 (카카오)
@@ -133,7 +138,11 @@ public class KakaoService {
         Optional<User> UserOptional = userRepository.findByProviderAndUserid(provider, providerId);
         if (UserOptional.isPresent()) {
             // 3. 기존 사용자일 경우, 해당 User 엔티티 반환
-            return UserOptional.get();
+            User existingUser = UserOptional.get();
+            existingUser.setRefreshToken(refreshToken); // 기존 사용자의 refreshToken 업데이트
+            log.info(" [Kakao Service] loginWithKakao - Updating existing user with refreshToken: {}", refreshToken);
+            userRepository.save(existingUser);
+            return existingUser;
         }
 
         // 4. 신규 사용자일 경우 회원가입 처리
@@ -142,6 +151,8 @@ public class KakaoService {
         newUser.setNickname(userInfo.getKakaoAccount().getProfile().getNickName()); // 카카오 닉네임 설정
         newUser.setUserid(providerId); // 카카오 고유 ID를 사용자 ID로 설정
         newUser.setProvider(provider); // 제공자 정보 설정
+        newUser.setRefreshToken(refreshToken); // refreshToken 저장
+        log.info(" [Kakao Service] loginWithKakao - Creating new user with refreshToken: {}", refreshToken);
         // 필요에 따라 추가 정보 설정 (예: 이메일, 이름 등)
         newUser.setEmail(userInfo.getKakaoAccount().getEmail()); // 이메일 설정
         // newUser.setName(userInfo.getKakaoAccount().getName());
