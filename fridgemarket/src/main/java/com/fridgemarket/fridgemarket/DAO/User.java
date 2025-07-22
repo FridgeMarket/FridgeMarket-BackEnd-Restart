@@ -37,4 +37,13 @@ public class User {
 
     @Column(name = "agreed")
     private Boolean agreed;
+
+    @Column(name = "provider")
+    private String provider;
+
+    @Column(name = "profile_num")
+    private Integer profilenum;
+
+    @Column(name = "refresh_token")
+    private String refreshToken;
 }
