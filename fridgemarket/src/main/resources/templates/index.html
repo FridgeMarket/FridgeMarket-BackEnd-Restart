@@ -48,15 +48,9 @@
         .kakao-button {
             background-color: #FEE500; /* Kakao yellow */
             color: #3C1E1E; /* Kakao text color */
-            padding: 0; /* Remove padding to let image handle size */
         }
         .kakao-button:hover {
             background-color: #e6cc00;
-        }
-        .kakao-button img {
-            vertical-align: middle;
-            width: 200px; /* Adjust as needed */
-            height: auto;
         }
         .info-box {
             margin-top: 30px;
@@ -81,16 +75,16 @@
         Google로 로그인
     </a>
 
-    <a href="/kakao/login" class="login-button kakao-button">
-        <img src="kakao_login_medium_narrow.png" alt="카카오 로그인">
+    <a href="/oauth2/authorization/kakao" class="login-button kakao-button">
+        카카오 로그인
     </a>
 
     <div class="info-box">
         <p><strong>참고 사항:</strong></p>
         <p>1. 이 페이지는 `/` (루트) 경로로 접근할 때 보입니다.</p>
-        <p>2. Google OAuth2 클라이언트 ID와 Secret이 `application.properties`에 올바르게 설정되어야 합니다.</p>
-        <p>3. Google Cloud Console에서 승인된 리디렉션 URI에 `http://localhost:8080/login/oauth2/code/google`을 추가해야 합니다.</p>
-        <p>4. 로그인 성공 시 `/success` 페이지로, 실패 시 `/loginFailure` 페이지로 이동합니다.</p>
+        <p>2. Google/Kakao OAuth2 클라이언트 ID와 Secret이 `application.yml`에 올바르게 설정되어야 합니다.</p>
+        <p>3. 각 소셜 로그인 플랫폼의 개발자 콘솔에서 승인된 리디렉션 URI에 `http://localhost:8080/login/oauth2/code/{provider}`를 추가해야 합니다.</p>
+        <p>4. 로그인 성공 시 추가 정보 입력 페이지(`/userinfo`)로 이동합니다.</p>
     </div>
 </div>
 </body>
