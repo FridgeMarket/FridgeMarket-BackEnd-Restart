@@ -31,9 +31,16 @@
             <label for="phone">전화번호:</label>
             <input type="text" id="phone" name="phone" th:value="*{phone}" placeholder="010-1234-5678" required>
         </div>
-        <div class="form-group">
-            <label for="address">주소:</label>
-            <input type="text" id="address" name="address" th:value="*{address}" required>
+        <div>
+            <label for="address" class="block text-sm font-medium text-gray-700">주소</label>
+            <input type="text" id="address" name="address" th:value="${user.address}" required
+                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+
+        <div>
+            <label for="birth" class="block text-sm font-medium text-gray-700">생년월일</label>
+            <input type="date" id="birth" name="birth" th:value="${user.birth}"
+                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
         </div>
         <div class="form-group checkbox-group">
             <input type="checkbox" id="agreed" name="agreed" value="true" th:checked="*{agreed}" required>

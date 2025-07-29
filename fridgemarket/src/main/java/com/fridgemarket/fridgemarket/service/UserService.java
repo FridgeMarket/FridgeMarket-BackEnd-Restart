@@ -38,6 +38,7 @@ public class UserService {
         user.setPhone(userUpdateDto.getPhone());
         user.setAddress(userUpdateDto.getAddress());
         user.setAgreed(userUpdateDto.isAgreed());
+        user.setBirth(userUpdateDto.getBirth()); // 생년월일 추가
 
         userRepository.save(user);
     }

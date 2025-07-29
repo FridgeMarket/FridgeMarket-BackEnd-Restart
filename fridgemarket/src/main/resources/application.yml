@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/fridgemarket
     username: root
-    password: donghwan02
+    password: soojong9627
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -37,6 +37,8 @@ spring:
               - account_email
             client-name: Kakao
         provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?access_type=offline
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
             token-uri: https://kauth.kakao.com/oauth/token

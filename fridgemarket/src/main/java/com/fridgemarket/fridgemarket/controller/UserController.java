@@ -64,6 +64,7 @@ public class UserController {
             existingUser.setPhone(user.getPhone());
             existingUser.setAddress(user.getAddress());
             existingUser.setAgreed(user.getAgreed());
+            existingUser.setBirth(user.getBirth()); // 생년월일 추가
             appUserRepository.save(existingUser);
         } else {
             // 신규 사용자 저장
