@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
+
 @Entity
 @Getter
 @Setter
@@ -37,4 +39,19 @@ public class User {
 
     @Column(name = "agreed")
     private Boolean agreed;
+
+    @Column(name = "provider")
+    private String provider;
+
+    @Column(name = "profile_url")
+    private String profileurl;
+
+    @Column(name = "refresh_token")
+    private String refreshToken;
+
+    @Column(name = "birth")
+    private LocalDate birth;
+
+    @Column(name = "admin")
+    private Boolean admin;
 }

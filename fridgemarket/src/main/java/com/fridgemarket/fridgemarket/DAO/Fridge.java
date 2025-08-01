@@ -43,6 +43,4 @@ public class Fridge {
     @Column(name = "registered_at")
     private Date registeredat;
 
-    @Column(name = "tag")
-    private String tag;
 }

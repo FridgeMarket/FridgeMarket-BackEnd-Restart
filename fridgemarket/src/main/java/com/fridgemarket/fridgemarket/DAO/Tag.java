@@ -6,25 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
-
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Chat {
+public class Tag {
     @Id@GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "chat_num")
-    private Long chatnum;
+    @Column(name = "tag_num")
+    private Long tagnum;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
-
-    @Column(name = "content")
-    private String content;
-
-    @Column(name = "send_time")
-    private Date sendtime;
+    @Column(name = "tag")
+    private String tag;
 }
