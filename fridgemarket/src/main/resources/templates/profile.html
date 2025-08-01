@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>내 프로필</title>
+</head>
+<body>
+<h2>내 프로필</h2>
+
+<form th:action="@{/profile/update}" method="post" th:object="${user}">
+    이름: <input type="text" th:field="*{name}" /><br/>
+    닉네임: <input type="text" th:field="*{nickname}" /><br/>
+    전화번호 : <input type="text" th:field="*{phone}" /><br/>
+    주소 : <input type="text" th:field="*{address}" /><br/>
+    <button type="submit">수정</button>
+</form>
+
+<form th:action="@{/profile/delete}" method="post" style="margin-top:20px;">
+    <button type="submit" style="color:red;">회원 탈퇴</button>
+</form>
+</body>
+</html>
