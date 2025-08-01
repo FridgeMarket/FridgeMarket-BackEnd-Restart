@@ -43,8 +43,8 @@ public class User {
     @Column(name = "provider")
     private String provider;
 
-    @Column(name = "profile_num")
-    private Integer profilenum;
+    @Column(name = "profile_url")
+    private String profileurl;
 
     @Column(name = "refresh_token")
     private String refreshToken;
