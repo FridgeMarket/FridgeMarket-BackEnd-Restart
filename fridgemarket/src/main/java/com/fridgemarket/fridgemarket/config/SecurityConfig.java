@@ -26,7 +26,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (개발 중일 경우)
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/", "/login", "/oauth2/**", "/error", "/loginFailure").permitAll()
+                        .requestMatchers("/", "/login", "/oauth2/**", "/error", "/loginFailure", "/uploads/**").permitAll()
                         .requestMatchers("/userinfo", "/updateUserInfo", "/success").authenticated()
                         .anyRequest().authenticated()
                 )
