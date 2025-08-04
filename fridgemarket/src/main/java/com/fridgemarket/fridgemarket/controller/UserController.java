@@ -2,6 +2,7 @@ package com.fridgemarket.fridgemarket.controller;
 
 import com.fridgemarket.fridgemarket.DAO.User;
 import com.fridgemarket.fridgemarket.repository.AppUserRepository;
+import com.fridgemarket.fridgemarket.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
@@ -18,6 +20,7 @@ import java.util.Optional;
 public class UserController {
 
     private final AppUserRepository appUserRepository;
+    private final UserService userService;
 
     // 로그인 성공 시 호출 (CustomAuthenticationSuccessHandler에서 리다이렉트)
     @GetMapping("/success")
@@ -34,6 +37,22 @@ public class UserController {
         User user = userOptional.get();
         model.addAttribute("user", user);
         return "success";  // src/main/resources/templates/success.html
+    }
+
+    @GetMapping("/additional-info-form")
+    public String additionalInfoForm(@RequestParam String socialId, @RequestParam String provider, Model model) {
+        User user = new User();
+        user.setUserid(socialId);
+        user.setProvider(provider);
+        model.addAttribute("user", user);
+        return "additional-info-form";
+    }
+
+    // 사용자 정보 저장 처리 (신규/수정 모두)
+    @PostMapping("/save-additional-info")
+    public String saveAdditionalInfo(@ModelAttribute User user, @RequestParam("profileImage") MultipartFile profileImage) {
+        userService.updateUser(user, profileImage);
+        return "redirect:/success";
     }
 
     // 사용자 정보 입력/수정 폼
@@ -96,21 +115,14 @@ public class UserController {
 
     // 사용자 정보 저장 처리 (신규/수정 모두)
     @PostMapping("/updateUserInfo")
-    public String updateUserInfo(@ModelAttribute User user) {
-        Optional<User> existingUserOpt = appUserRepository.findByProviderAndUserid(user.getProvider(), user.getUserid());
-        if (existingUserOpt.isPresent()) {
-            User existingUser = existingUserOpt.get();
-            // 수정할 필드만 업데이트
-            existingUser.setNickname(user.getNickname());
-            existingUser.setPhone(user.getPhone());
-            existingUser.setAddress(user.getAddress());
-            existingUser.setAgreed(user.getAgreed());
-            existingUser.setBirth(user.getBirth()); // 생년월일 추가
-            appUserRepository.save(existingUser);
-        } else {
-            // 신규 사용자 저장
-            appUserRepository.save(user);
-        }
+    public String updateUserInfo(@ModelAttribute User user, @RequestParam("profileImage") MultipartFile profileImage) {
+        userService.updateUser(user, profileImage);
         return "redirect:/success";
+    }
+
+    // 게시글 작성 페이지 (임시)
+    @GetMapping("/posts")
+    public String postsPage() {
+        return "posts"; // src/main/resources/templates/posts.html
     }
 }

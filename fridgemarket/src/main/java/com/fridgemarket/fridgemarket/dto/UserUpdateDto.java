@@ -17,4 +17,5 @@ public class UserUpdateDto {
     private String address;
     private boolean agreed;
     private LocalDate birth;
+    private String profileurl;
 }

@@ -1,3 +1,133 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>로그인 성공</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #28a745;
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+        .user-info {
+            background-color: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .user-info p {
+            margin: 0.5rem 0;
+            color: #495057;
+        }
+        .user-info strong {
+            color: #212529;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            text-align: center;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+            transform: translateY(-1px);
+        }
+        .welcome-message {
+            text-align: center;
+            color: #28a745;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+        .profile-image {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .profile-image img {
+            border-radius: 50%;
+            border: 3px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-message">
+            <h1>환영합니다, <span th:text="${user.nickname} ?: ${user.name}">사용자</span>님!</h1>
+        </div>
+
+        <div class="profile-image" th:if="${user.profileurl}">
+            <img th:src="@{${user.profileurl}}" alt="프로필 사진" width="100" height="100" />
+        </div>
+
+        <div class="user-info">
+            <p><strong>이메일:</strong> <span th:text="${user.email}">이메일</span></p>
+            <p><strong>닉네임:</strong> <span th:text="${user.nickname}">닉네임</span></p>
+            <p><strong>전화번호:</strong> <span th:text="${user.phone}">전화번호</span></p>
+            <p><strong>주소:</strong> <span th:text="${user.address}">주소</span></p>
+            <p><strong>생년월일:</strong> <span th:text="${user.birth}">생년월일</span></p>
+        </div>
+
+        <div class="button-group">
+            <a href="/posts" class="btn btn-success">게시글 작성</a>
+            
+            <a href="/userinfo" class="btn btn-primary">사용자 정보 수정</a>
+            
+            <a href="/" class="btn btn-secondary">홈으로 돌아가기</a>
+        </div>
+    </div>
+</body>
+</html>
+=======
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>

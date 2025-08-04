@@ -12,7 +12,7 @@
     <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">추가 정보 입력</h2>
     <p class="text-gray-600 text-center mb-4">서비스 이용을 위해 추가 정보를 입력해주세요.</p>
 
-    <form th:action="@{/signup/additional-info}" method="post" class="space-y-4">
+    <form th:action="@{/save-additional-info}" method="post" enctype="multipart/form-data" class="space-y-4">
         <div>
             <label for="nickname" class="block text-sm font-medium text-gray-700">닉네임</label>
             <input type="text" id="nickname" name="nickname" th:value="${appUser.nickname}" required
@@ -35,6 +35,12 @@
             <label for="birth" class="block text-sm font-medium text-gray-700">생년월일</label>
             <input type="date" id="birth" name="birth" th:value="${appUser.birth}"
                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        </div>
+
+        <div>
+            <label for="profileImage" class="block text-sm font-medium text-gray-700">프로필 사진</label>
+            <input type="file" id="profileImage" name="profileImage" accept="image/*"
+                   class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"/>
         </div>
 
         <div class="flex items-center">

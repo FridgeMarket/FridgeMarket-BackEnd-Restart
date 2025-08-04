@@ -65,7 +65,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             } else {
                 System.out.println("신규 사용자 확인");
                 System.out.println("'/userinfo'로 리디렉션 시도");
-                response.sendRedirect("/userinfo?socialId=" + socialId + "&provider=" + provider);
+                response.sendRedirect("/additional-info-form?socialId=" + socialId + "&provider=" + provider);
             }
         } catch (Exception e) {
             System.err.println("AuthenticationSuccessHandler 내에서 예외 발생: " + e.getMessage());

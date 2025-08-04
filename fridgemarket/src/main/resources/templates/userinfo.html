@@ -33,8 +33,7 @@
         <!-- 기존 사용자인 경우 환영 메시지 표시 -->
         <div th:if="${user.nickname != null and user.nickname != ''}" class="welcome-message">
             안녕하세요, <span th:text="${user.nickname}">사용자</span>님!
-        </div>
-        
+      </div>
         <input type="hidden" id="socialId" name="userid" th:value="*{userid}" />
         <input type="hidden" id="provider" name="provider" th:value="*{provider}" />
         
@@ -57,7 +56,6 @@
             <label for="birth">생년월일:</label>
             <input type="date" id="birth" name="birth" th:value="*{birth}">
         </div>
-        
         <div class="form-group checkbox-group">
             <input type="checkbox" id="agreed" name="agreed" value="true" th:checked="*{agreed}" required>
             <label for="agreed">이용약관에 동의합니다.</label>

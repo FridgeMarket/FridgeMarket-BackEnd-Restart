@@ -8,15 +8,30 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.OAuth2User; // OAuth2User 임포트
 import org.springframework.stereotype.Service;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional; // Optional 임포트
+import java.util.UUID;
 
 @Service
 public class UserService {
 
     private final AppUserRepository userRepository;
 
+    private final Path rootLocation = Paths.get("uploads");
+
     public UserService(AppUserRepository userRepository) {
         this.userRepository = userRepository;
+        try {
+            Files.createDirectories(rootLocation.resolve("profile_images"));
+        } catch (IOException e) {
+            throw new RuntimeException("Could not initialize storage", e);
+        }
     }
 
     // ... (기존 isUserExists, saveOrUpdateUser 메서드 유지)
@@ -28,6 +43,40 @@ public class UserService {
 
     public User findByUserId(String userId) {
         return userRepository.findByUserid(userId).orElse(null);
+    }
+
+    @Transactional
+    public void updateUser(User user, MultipartFile profileImage) {
+        Optional<User> existingUserOpt = userRepository.findByProviderAndUserid(user.getProvider(), user.getUserid());
+        User userToUpdate;
+        if (existingUserOpt.isPresent()) {
+            userToUpdate = existingUserOpt.get();
+        } else {
+            userToUpdate = new User();
+            userToUpdate.setUserid(user.getUserid());
+            userToUpdate.setProvider(user.getProvider());
+        }
+
+        userToUpdate.setNickname(user.getNickname());
+        userToUpdate.setPhone(user.getPhone());
+        userToUpdate.setAddress(user.getAddress());
+        userToUpdate.setAgreed(user.getAgreed());
+        userToUpdate.setBirth(user.getBirth());
+
+        if (profileImage != null && !profileImage.isEmpty()) {
+            try {
+                String filename = UUID.randomUUID().toString() + "_" + profileImage.getOriginalFilename();
+                Path destinationFile = this.rootLocation.resolve("profile_images").resolve(Paths.get(filename)).normalize().toAbsolutePath();
+                profileImage.transferTo(destinationFile);
+                userToUpdate.setProfileurl("/uploads/profile_images/" + filename);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to store file", e);
+            }
+        } else {
+            userToUpdate.setProfileurl("/images/FridgeMarketIcon.png");
+        }
+
+        userRepository.save(userToUpdate);
     }
 
     @Transactional
