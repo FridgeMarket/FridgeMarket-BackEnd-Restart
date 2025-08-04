@@ -60,7 +60,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                     appUserRepository.save(user);
                     System.out.println("DB에 RefreshToken 저장 완료");
                 }
-                System.out.println("'/success'로 리디렉션 시도");
+                System.out.println("기존 사용자 - '/success'로 리디렉션");
                 response.sendRedirect("/success");
             } else {
                 System.out.println("신규 사용자 확인");
@@ -70,7 +70,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         } catch (Exception e) {
             System.err.println("AuthenticationSuccessHandler 내에서 예외 발생: " + e.getMessage());
             e.printStackTrace();
-            // response.sendRedirect("/loginFailure"); // 예외 발생 시 loginFailure로 리다이렉트 제거
+            // 예외 발생 시 기본적으로 success 페이지로 리다이렉트
+            response.sendRedirect("/success");
         }
     }
 }

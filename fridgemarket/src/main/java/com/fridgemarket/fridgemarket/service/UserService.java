@@ -41,6 +41,10 @@ public class UserService {
         return userRepository.findByProviderAndUserid(provider, socialId);
     }
 
+    public User findByUserId(String userId) {
+        return userRepository.findByUserid(userId).orElse(null);
+    }
+
     @Transactional
     public void updateUser(User user, MultipartFile profileImage) {
         Optional<User> existingUserOpt = userRepository.findByProviderAndUserid(user.getProvider(), user.getUserid());

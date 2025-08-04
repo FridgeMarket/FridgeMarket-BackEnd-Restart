@@ -5,6 +5,7 @@ import com.fridgemarket.fridgemarket.repository.AppUserRepository;
 import com.fridgemarket.fridgemarket.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
@@ -56,9 +57,23 @@ public class UserController {
 
     // 사용자 정보 입력/수정 폼
     @GetMapping("/userinfo")
-    public String userInfoPage(@RequestParam String socialId,
-                               @RequestParam String provider,
+    public String userInfoPage(@RequestParam(required = false) String socialId,
+                               @RequestParam(required = false) String provider,
+                               Authentication authentication,
                                Model model) {
+        
+        // 파라미터가 없는 경우 인증된 사용자 정보에서 가져오기
+        if (socialId == null || provider == null) {
+            if (authentication != null && authentication instanceof OAuth2AuthenticationToken) {
+                OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
+                provider = token.getAuthorizedClientRegistrationId();
+                socialId = token.getPrincipal().getName();
+            } else {
+                // 인증되지 않은 경우 로그인 페이지로 리다이렉트
+                return "redirect:/login";
+            }
+        }
+        
         Optional<User> userOptional = appUserRepository.findByProviderAndUserid(provider, socialId);
         if (userOptional.isPresent()) {
             model.addAttribute("user", userOptional.get());
@@ -67,9 +82,35 @@ public class UserController {
             User newUser = new User();
             newUser.setUserid(socialId);
             newUser.setProvider(provider);
+            newUser.setAdmin(false); // 기본값으로 admin을 false로 설정
             model.addAttribute("user", newUser);
         }
         return "userinfo";  // src/main/resources/templates/userinfo.html
+    }
+
+    // 현재 인증된 사용자 정보를 JSON으로 반환하는 API
+    @GetMapping("/api/current-user")
+    @ResponseBody
+    public ResponseEntity<User> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !(authentication instanceof OAuth2AuthenticationToken)) {
+            return ResponseEntity.status(401).build();
+        }
+        
+        OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
+        String provider = token.getAuthorizedClientRegistrationId();
+        String socialId = token.getPrincipal().getName();
+        
+        Optional<User> userOptional = appUserRepository.findByProviderAndUserid(provider, socialId);
+        if (userOptional.isPresent()) {
+            return ResponseEntity.ok(userOptional.get());
+        } else {
+            return ResponseEntity.status(404).build();
+        }
+    }
+
+    @GetMapping("/posts")
+    public String postCrudPage() {
+        return "post-crud"; // src/main/resources/templates/post-crud.html
     }
 
     // 사용자 정보 저장 처리 (신규/수정 모두)
