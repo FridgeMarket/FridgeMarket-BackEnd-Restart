@@ -48,21 +48,89 @@
             color: #6c757d;
             margin: 0 auto;
         }
+        .file-upload-group {
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .file-upload-label {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #555;
+            transition: all 0.3s ease;
+        }
+        .file-upload-label:hover {
+            background-color: #e9ecef;
+            border-color: #007bff;
+        }
+        .file-upload-input {
+            display: none;
+        }
+        .preview-container {
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .preview-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid #28a745;
+            object-fit: cover;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .remove-image-btn {
+            margin-top: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .remove-image-btn:hover {
+            background-color: #c82333;
+        }
+        .file-info {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <form th:action="@{/updateUserInfo}" method="post" th:object="${user}">
+    <form th:action="@{/updateUserInfo}" method="post" th:object="${user}" enctype="multipart/form-data">
         <h1>회원 정보 관리</h1>
         
         <!-- 프로필 이미지 표시 -->
         <div class="profile-image" th:if="${user.profileurl}">
-            <img th:src="${user.profileurl}" alt="프로필 사진" />
+            <img th:src="${user.profileurl}" alt="프로필 사진" id="currentProfileImage" />
         </div>
         <div class="profile-image" th:unless="${user.profileurl}">
-            <div class="default-avatar">
+            <div class="default-avatar" id="currentProfileImage">
                 <span th:text="${#strings.substring(user.nickname ?: user.name, 0, 1)}">U</span>
             </div>
+        </div>
+        
+        <!-- 프로필 사진 업로드 -->
+        <div class="file-upload-group">
+            <label for="profileImage" class="file-upload-label">
+                📷 프로필 사진 변경
+            </label>
+            <input type="file" id="profileImage" name="profileImage" class="file-upload-input" accept="image/*" onchange="previewImage(this)">
+            <div class="file-info">JPG, PNG, GIF 파일만 업로드 가능 (최대 5MB)</div>
+        </div>
+        
+        <!-- 이미지 미리보기 -->
+        <div class="preview-container" id="previewContainer" style="display: none;">
+            <img id="previewImage" class="preview-image" alt="미리보기">
+            <br>
+            <button type="button" class="remove-image-btn" onclick="removeImage()">제거</button>
         </div>
         
         <!-- 기존 사용자인 경우 환영 메시지 표시 -->
@@ -104,5 +172,68 @@
         </div>
     </form>
 </div>
+
+<script>
+function previewImage(input) {
+    const file = input.files[0];
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+    
+    if (file) {
+        // 파일 크기 검증 (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('파일 크기는 5MB 이하여야 합니다.');
+            input.value = '';
+            return;
+        }
+        
+        // 파일 타입 검증
+        if (!file.type.startsWith('image/')) {
+            alert('이미지 파일만 업로드 가능합니다.');
+            input.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    } else {
+        previewContainer.style.display = 'none';
+    }
+}
+
+function removeImage() {
+    const input = document.getElementById('profileImage');
+    const previewContainer = document.getElementById('previewContainer');
+    
+    input.value = '';
+    previewContainer.style.display = 'none';
+}
+
+// 폼 제출 시 파일 검증
+document.querySelector('form').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('profileImage');
+    const file = fileInput.files[0];
+    
+    if (file) {
+        // 파일 크기 검증
+        if (file.size > 5 * 1024 * 1024) {
+            e.preventDefault();
+            alert('파일 크기는 5MB 이하여야 합니다.');
+            return;
+        }
+        
+        // 파일 타입 검증
+        if (!file.type.startsWith('image/')) {
+            e.preventDefault();
+            alert('이미지 파일만 업로드 가능합니다.');
+            return;
+        }
+    }
+});
+</script>
 </body>
 </html>

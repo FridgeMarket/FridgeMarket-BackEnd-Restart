@@ -121,8 +121,8 @@ public class UserController {
     }
 
     // 게시글 작성 페이지 (임시)
-    @GetMapping("/posts")
-    public String postsPage() {
-        return "posts"; // src/main/resources/templates/posts.html
-    }
+//    @GetMapping("/posts")
+//    public String postsPage() {
+//        return "posts"; // src/main/resources/templates/posts.html
+//    }
 }
