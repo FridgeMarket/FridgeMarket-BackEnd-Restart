@@ -25,8 +25,8 @@ public class Fridge {
     @Column(name = "food_name")
     private String foodname;
 
-    @Column(name = "category")
-    private String category;
+    @Column(name = "tag")
+    private String tag;
 
     @Column(name = "amount")
     private Long amount;

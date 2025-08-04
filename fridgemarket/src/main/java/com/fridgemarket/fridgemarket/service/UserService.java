@@ -26,6 +26,10 @@ public class UserService {
         return userRepository.findByProviderAndUserid(provider, socialId);
     }
 
+    public User findByUserId(String userId) {
+        return userRepository.findByUserid(userId).orElse(null);
+    }
+
     @Transactional
     public void updateUserInfo(UserUpdateDto userUpdateDto) {
         // DTO에서 provider와 socialId를 가져와서 사용자를 찾습니다.
