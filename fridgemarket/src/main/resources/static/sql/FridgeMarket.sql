@@ -13,22 +13,32 @@ CREATE TABLE User (
 CREATE TABLE Post (
                       Post_num INT PRIMARY KEY AUTO_INCREMENT,
                       User_id VARCHAR(100),
-                      tag VARCHAR(20),
+                      tag VARCHAR(20), -- 음식 카테고리 (육류, 채소, 해산물, 과일, 유제품, 곡류, 가공식품)
                       title VARCHAR(100),
                       content VARCHAR(1000),
                       expiration_date DATE,
-                      status BOOLEAN,
+                      status BOOLEAN, -- 나눔 상태 (true: 진행중, false: 완료)
                       created_at DATE,
                       refridger_food VARCHAR(100), -- 냉장고 안 재료일 시 매핑, 아니면 NULL
+                      image_url VARCHAR(500), -- 이미지 URL 저장
 
                       FOREIGN KEY (User_id) REFERENCES User(User_id),
                       FOREIGN KEY (tag) REFERENCES Tag(tag)
 );
 
--- 태그 테이블
+-- 태그 테이블 (음식 카테고리)
 CREATE TABLE Tag (
-                     tag VARCHAR(20) PRIMARY KEY -- 나눔 진행중 / 나눔 완료
+                     tag VARCHAR(20) PRIMARY KEY -- 육류, 채소, 해산물, 과일, 유제품, 곡류, 가공식품
 );
+
+-- 음식 카테고리 데이터 삽입
+INSERT INTO Tag (tag) VALUES ('육류');
+INSERT INTO Tag (tag) VALUES ('채소');
+INSERT INTO Tag (tag) VALUES ('해산물');
+INSERT INTO Tag (tag) VALUES ('과일');
+INSERT INTO Tag (tag) VALUES ('유제품');
+INSERT INTO Tag (tag) VALUES ('곡류');
+INSERT INTO Tag (tag) VALUES ('가공식품');
 
 -- 쪽지 테이블
 CREATE TABLE Chat (

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post CRUD</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        form div { margin-bottom: 10px; }
+        label { display: inline-block; width: 100px; }
+        input[type="text"], textarea, input[type="date"] { width: 300px; padding: 8px; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .post-item { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .post-item button { margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Post Management</h1>
+
+        <div id="auth-status">
+            <p>Loading user status...</p>
+        </div>
+
+        <h2>Add/Update Post</h2>
+        <div style="margin-bottom: 1rem;">
+            <button type="button" onclick="clearForm()" style="background-color: #17a2b8; color: white; padding: 0.5rem 1rem; border: none; border-radius: 4px; cursor: pointer; margin-right: 0.5rem;">새 게시글 작성</button>
+        </div>
+        <form id="post-form">
+            <div id="post-id-container" style="display: none;">
+                <label for="post-id">Post ID (for update):</label>
+                <input type="number" id="post-id" placeholder="Leave empty for new post" min="1" readonly>
+            </div>
+            <div>
+                <label for="title">Title:</label>
+                <input type="text" id="title" required>
+            </div>
+            <div>
+                <label for="content">Content:</label>
+                <textarea id="content" rows="5" required></textarea>
+            </div>
+            <div>
+                <label for="tag">음식 카테고리:</label>
+                <select id="tag" required>
+                    <option value="">카테고리를 선택하세요</option>
+                    <option value="육류">육류</option>
+                    <option value="채소">채소</option>
+                    <option value="해산물">해산물</option>
+                    <option value="과일">과일</option>
+                    <option value="유제품">유제품</option>
+                    <option value="곡류">곡류</option>
+                    <option value="가공식품">가공식품</option>
+                </select>
+            </div>
+            <div>
+                <label for="expiration-date">Expiration Date:</label>
+                <input type="date" id="expiration-date">
+            </div>
+            <div>
+                <label for="status">나눔 상태:</label>
+                <select id="status" required>
+                    <option value="">상태를 선택하세요</option>
+                    <option value="true">나눔 진행중</option>
+                    <option value="false">나눔 완료</option>
+                </select>
+            </div>
+            <div>
+                <label for="refridger-food">Refridger Food:</label>
+                <input type="text" id="refridger-food">
+            </div>
+            <div>
+                <label for="image-upload">Image:</label>
+                <input type="file" id="image-upload" accept="image/*">
+                <div id="image-preview" style="margin-top: 10px;"></div>
+            </div>
+            <div>
+                <button type="submit">Save Post</button>
+            </div>
+        </form>
+
+        <h2>Search Posts</h2>
+        <div>
+            <input type="text" id="search-query" placeholder="Search by title or content">
+            <button id="search-button">Search</button>
+            <button id="show-all-button">Show All Posts</button>
+        </div>
+        
+        <h3>Filter by Category</h3>
+        <div>
+            <select id="category-filter">
+                <option value="">모든 카테고리</option>
+                <option value="육류">육류</option>
+                <option value="채소">채소</option>
+                <option value="해산물">해산물</option>
+                <option value="과일">과일</option>
+                <option value="유제품">유제품</option>
+                <option value="곡류">곡류</option>
+                <option value="가공식품">가공식품</option>
+            </select>
+            <select id="status-filter">
+                <option value="">모든 상태</option>
+                <option value="true">나눔 진행중</option>
+                <option value="false">나눔 완료</option>
+            </select>
+            <button id="filter-button">Filter</button>
+        </div>
+
+        <h2>Post List</h2>
+        <div id="post-list"></div>
+    </div>
+
+    <script>
+        const authStatusDiv = document.getElementById('auth-status');
+        const postIdInput = document.getElementById('post-id');
+        const titleInput = document.getElementById('title');
+        const contentInput = document.getElementById('content');
+        const tagSelect = document.getElementById('tag');
+        const expirationDateInput = document.getElementById('expiration-date');
+        const statusSelect = document.getElementById('status'); // Changed from statusInput to statusSelect
+        const refridgerFoodInput = document.getElementById('refridger-food');
+        const imageUploadInput = document.getElementById('image-upload');
+        const imagePreviewDiv = document.getElementById('image-preview');
+        const postForm = document.getElementById('post-form');
+        const searchQueryInput = document.getElementById('search-query');
+        const searchButton = document.getElementById('search-button');
+        const showAllButton = document.getElementById('show-all-button');
+        const categoryFilterSelect = document.getElementById('category-filter');
+        const statusFilterSelect = document.getElementById('status-filter');
+        const filterButton = document.getElementById('filter-button');
+        const postListDiv = document.getElementById('post-list');
+
+        let currentUser = null;
+        let currentImageUrl = null;
+
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/current-user'); // 올바른 API 엔드포인트 사용
+                if (response.ok) {
+                    const userData = await response.json();
+                    currentUser = userData;
+                    authStatusDiv.innerHTML = `<p>Logged in as: <strong>${userData.name || userData.nickname || userData.userid}</strong></p>`;
+                    if (userData.admin) {
+                        authStatusDiv.innerHTML += `<p><strong>(Admin User)</strong></p>`;
+                    }
+                    clearForm(); // 폼 초기화 (Post ID 필드 숨김)
+                    loadPosts(); // Load posts if authenticated
+                } else if (response.status === 401) {
+                    authStatusDiv.innerHTML = `<p>Not logged in. Please <a href="/login">login</a> to manage posts.</p>`;
+                } else {
+                    authStatusDiv.innerHTML = `<p>Error: ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                console.error('Error checking auth status:', error);
+                authStatusDiv.innerHTML = `<p>Error checking login status. Please <a href="/login">login</a>.</p>`;
+            }
+        }
+
+        async function loadPosts(query = '', category = '', status = '') {
+            postListDiv.innerHTML = 'Loading posts...';
+            try {
+                const url = `/api/posts/search-post?query=${encodeURIComponent(query)}&category=${encodeURIComponent(category)}&status=${encodeURIComponent(status)}`;
+                const response = await fetch(url);
+                if (response.ok) {
+                    const posts = await response.json();
+                    displayPosts(posts);
+                } else {
+                    postListDiv.innerHTML = `<p>Error loading posts: ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                postListDiv.innerHTML = `<p>Error loading posts.</p>`;
+            }
+        }
+
+        function displayPosts(posts) {
+            postListDiv.innerHTML = '';
+            if (posts.length === 0) {
+                postListDiv.innerHTML = '<p>No posts found.</p>';
+                return;
+            }
+            posts.forEach(post => {
+                const postItem = document.createElement('div');
+                postItem.className = 'post-item';
+                
+                const imageHtml = post.imageUrl ? 
+                    `<img src="${post.imageUrl}" alt="Post Image" style="max-width: 150px; max-height: 150px; margin: 10px 0; border-radius: 4px;">` : 
+                    '';
+                
+                postItem.innerHTML = `
+                    <h3>${post.title} (ID: ${post.postnum})</h3>
+                    ${imageHtml}
+                    <p><strong>Content:</strong> ${post.content}</p>
+                    <p><strong>음식 카테고리:</strong> ${post.tag || 'N/A'}</p>
+                    <p><strong>나눔 상태:</strong> ${post.status ? '나눔 진행중' : '나눔 완료'}</p>
+                    <p><strong>Author:</strong> ${post.user ? (post.user.nickname || post.user.name || post.user.userid) : 'Unknown'}</p>
+                    <p><strong>Expiration:</strong> ${post.expirationdate ? new Date(post.expirationdate).toLocaleDateString() : 'N/A'}</p>
+                    <p><strong>Refridger Food:</strong> ${post.refridgerfood || 'N/A'}</p>
+                    <p><strong>Created At:</strong> ${new Date(post.createdat).toLocaleString()}</p>
+                `;
+
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Edit';
+                editButton.onclick = () => populateFormForEdit(post);
+                postItem.appendChild(editButton);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.onclick = () => deletePost(post.postnum);
+                postItem.appendChild(deleteButton);
+
+                postListDiv.appendChild(postItem);
+            });
+        }
+
+        function populateFormForEdit(post) {
+            // Post ID 컨테이너를 표시하고 ID 설정
+            document.getElementById('post-id-container').style.display = 'block';
+            postIdInput.value = post.postnum || '';
+            
+            titleInput.value = post.title;
+            contentInput.value = post.content;
+            tagSelect.value = post.tag || '';
+            expirationDateInput.value = post.expirationdate ? new Date(post.expirationdate).toISOString().split('T')[0] : '';
+            statusSelect.value = post.status !== null ? post.status.toString() : ''; // Changed from statusInput to statusSelect
+            refridgerFoodInput.value = post.refridgerfood || '';
+            
+            // 이미지 처리
+            if (post.imageUrl) {
+                currentImageUrl = post.imageUrl;
+                showImagePreview(post.imageUrl);
+            } else {
+                currentImageUrl = null;
+                imagePreviewDiv.innerHTML = '';
+            }
+        }
+
+        function clearForm() {
+            // Post ID 컨테이너를 숨기고 폼 초기화
+            document.getElementById('post-id-container').style.display = 'none';
+            postIdInput.value = '';
+            titleInput.value = '';
+            contentInput.value = '';
+            tagSelect.value = '';
+            expirationDateInput.value = '';
+            statusSelect.value = ''; // Changed from statusInput to statusSelect
+            refridgerFoodInput.value = '';
+            imageUploadInput.value = '';
+            imagePreviewDiv.innerHTML = '';
+            currentImageUrl = null;
+        }
+
+        // 이미지 업로드 처리
+        async function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/posts/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const imageUrl = await response.text();
+                    currentImageUrl = imageUrl;
+                    showImagePreview(imageUrl);
+                    return imageUrl;
+                } else {
+                    alert('이미지 업로드에 실패했습니다.');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                alert('이미지 업로드 중 오류가 발생했습니다.');
+                return null;
+            }
+        }
+
+        // 이미지 미리보기 표시
+        function showImagePreview(imageUrl) {
+            imagePreviewDiv.innerHTML = `
+                <img src="${imageUrl}" alt="Preview" style="max-width: 200px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;">
+                <button type="button" onclick="removeImage()" style="margin-left: 10px; background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">삭제</button>
+            `;
+        }
+
+        // 이미지 삭제
+        function removeImage() {
+            currentImageUrl = null;
+            imagePreviewDiv.innerHTML = '';
+            imageUploadInput.value = '';
+        }
+
+        // 이미지 파일 선택 이벤트
+        imageUploadInput.addEventListener('change', async function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                await uploadImage(file);
+            }
+        });
+
+        async function savePost(event) {
+            event.preventDefault();
+
+            if (!currentUser) {
+                alert('Please log in to save posts.');
+                return;
+            }
+
+            const postId = postIdInput.value;
+            
+            // Post ID가 있으면 숫자인지 확인 (수정 모드)
+            if (postId && (isNaN(postId) || parseInt(postId) <= 0)) {
+                alert('Post ID는 1 이상의 숫자여야 합니다.');
+                return;
+            }
+
+            const postData = {
+                title: titleInput.value,
+                content: contentInput.value,
+                tag: tagSelect.value,
+                expirationdate: expirationDateInput.value ? new Date(expirationDateInput.value).toISOString() : null,
+                status: statusSelect.value === 'true' ? true : (statusSelect.value === 'false' ? false : null), // Changed from statusInput to statusSelect
+                refridgerfood: refridgerFoodInput.value,
+                imageUrl: currentImageUrl,  // 이미지 URL 추가
+                // user will be set on the backend based on authenticated user
+            };
+
+            let url = '/api/posts/add-post';
+            let method = 'POST';
+
+            if (postId && postId.trim() !== '') {
+                url = `/api/posts/update-post/${parseInt(postId)}`;
+                method = 'PUT';
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(postData),
+                });
+
+                if (response.ok) {
+                    alert('Post saved successfully!');
+                    clearForm(); // 폼 초기화
+                    loadPosts(); // Reload posts
+                } else if (response.status === 401) {
+                    alert('Unauthorized: Please log in.');
+                } else if (response.status === 403) {
+                    alert('Forbidden: You are not authorized to perform this action.');
+                } else {
+                    const errorText = await response.text();
+                    alert(`Failed to save post: ${response.statusText}. Details: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Error saving post:', error);
+                alert('An error occurred while saving the post.');
+            }
+        }
+
+        async function deletePost(id) {
+            if (!confirm('Are you sure you want to delete this post?')) {
+                return;
+            }
+
+            if (!currentUser) {
+                alert('Please log in to delete posts.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/posts/delete-post/${id}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    alert('Post deleted successfully!');
+                    loadPosts(); // Reload posts
+                } else if (response.status === 401) {
+                    alert('Unauthorized: Please log in.');
+                } else if (response.status === 403) {
+                    alert('Forbidden: You are not authorized to delete this post.');
+                } else if (response.status === 404) {
+                    alert('Post not found.');
+                } else {
+                    const errorText = await response.text();
+                    alert(`Failed to delete post: ${response.statusText}. Details: ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Error deleting post:', error);
+                alert('An error occurred while deleting the post.');
+            }
+        }
+
+        postForm.addEventListener('submit', savePost);
+        searchButton.addEventListener('click', () => loadPosts(searchQueryInput.value, '', '')); // Clear category and status filters
+        showAllButton.addEventListener('click', () => {
+            searchQueryInput.value = '';
+            loadPosts();
+        });
+
+        filterButton.addEventListener('click', () => {
+            loadPosts(searchQueryInput.value, categoryFilterSelect.value, statusFilterSelect.value);
+        });
+
+        // Initial check on page load
+        checkAuthStatus();
+    </script>
+</body>
+</html>

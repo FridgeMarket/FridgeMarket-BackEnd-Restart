@@ -27,7 +27,8 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (개발 중일 경우)
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/login", "/oauth2/**", "/error", "/loginFailure").permitAll()
-                        .requestMatchers("/userinfo", "/updateUserInfo", "/success").authenticated()
+                        .requestMatchers("/userinfo", "/updateUserInfo", "/success", "/posts").authenticated()
+                        .requestMatchers("/api/posts/**", "/api/current-user").authenticated() // API 엔드포인트도 인증 필요
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -37,6 +38,10 @@ public class SecurityConfig {
                         .successHandler(customAuthenticationSuccessHandler)
                         .failureUrl("/loginFailure")
                         .authorizedClientService(authorizedClientService)
+                )
+                .sessionManagement(session -> session
+                        .maximumSessions(1) // 동시 세션 수 제한
+                        .maxSessionsPreventsLogin(false) // 기존 세션 무효화
                 );
 
         return http.build();
