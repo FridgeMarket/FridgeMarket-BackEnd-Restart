@@ -78,4 +78,10 @@ public class UserController {
         userService.updateUser(user, profileImage);
         return "redirect:/success";
     }
+
+    // 게시글 작성 페이지 (임시)
+    @GetMapping("/posts")
+    public String postsPage() {
+        return "posts"; // src/main/resources/templates/posts.html
+    }
 }
