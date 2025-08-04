@@ -33,9 +33,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String socialId = oauth2User.getName(); // This is the unique ID from the provider
 
         // 1. Extract user info based on provider
+        String profileUrl = "";
         if ("google".equals(registrationId)) {
             email = oauth2User.getAttribute("email");
             name = oauth2User.getAttribute("name");
+            profileUrl = oauth2User.getAttribute("picture"); // Google 프로필 이미지 URL
         } else if ("kakao".equals(registrationId)) {
             Map<String, Object> kakaoAccount = oauth2User.getAttribute("kakao_account");
             if (kakaoAccount != null) {
@@ -43,6 +45,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
                 if (profile != null) {
                     name = (String) profile.get("nickname");
+                    profileUrl = (String) profile.get("profile_image_url"); // Kakao 프로필 이미지 URL
                 }
             }
         }
@@ -58,12 +61,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         User appUser;
         if (userOptional.isPresent()) {
             appUser = userOptional.get();
+            // 기존 사용자의 경우 프로필 URL 업데이트 (소셜 로그인 시 최신 프로필 사진 반영)
+            if (profileUrl != null && !profileUrl.isEmpty()) {
+                appUser.setProfileurl(profileUrl);
+            }
         } else {
             appUser = new User();
             appUser.setUserid(socialId);
             appUser.setProvider(provider);
             appUser.setEmail(email);
             appUser.setName(name);
+            appUser.setProfileurl(profileUrl); // 새 사용자의 경우 프로필 URL 설정
             appUser.setNickname(null);
             appUser.setPhone("");
             appUser.setAddress("");
