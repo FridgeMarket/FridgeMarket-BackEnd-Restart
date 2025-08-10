@@ -31,7 +31,6 @@ import java.util.UUID;
  * - POST /api/posts/upload-image: 이미지 업로드
  */
 @RestController
-@RequestMapping("/api/posts")
 public class PostController {
 
     // 게시글 서비스 (의존성 주입)
@@ -121,7 +120,7 @@ public class PostController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
-
+    //게시물 검색 기능
     @GetMapping("/search-post")
     public ResponseEntity<List<Post>> searchPosts(
             @RequestParam(required = false) String query,

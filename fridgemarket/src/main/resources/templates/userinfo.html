@@ -105,7 +105,14 @@
 <body>
 <div class="container">
     <form th:action="@{/user-info}" method="post" th:object="${user}" enctype="multipart/form-data">
-        <h1>회원 정보 관리</h1>
+        <!-- 신규/기존 사용자 구분에 따른 제목 표시 -->
+        <h1 th:if="${isNewUser}">추가 정보 입력</h1>
+        <h1 th:unless="${isNewUser}">회원 정보 관리</h1>
+        
+        <!-- 신규 사용자 안내 메시지 -->
+        <div th:if="${isNewUser}" class="welcome-message" style="text-align: center; color: #007bff; font-weight: 500; margin-bottom: 1rem;">
+            서비스 이용을 위해 추가 정보를 입력해주세요.
+        </div>
         
         <!-- 프로필 이미지 표시 -->
         <div class="profile-image" th:if="${user.profileurl != null and user.profileurl != ''}">

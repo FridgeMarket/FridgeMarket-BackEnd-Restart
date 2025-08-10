@@ -17,19 +17,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Optional;
 
-/**
- * 사용자 관련 웹 요청을 처리하는 컨트롤러
- * 
- * 주요 기능:
- * 1. 사용자 인증 및 로그인 처리
- * 2. 사용자 정보 관리 (조회, 수정, 추가 정보 입력)
- * 3. JWT 토큰 발급 및 갱신
- * 4. 프로필 이미지 업로드 처리
- * 
- * 제공 엔드포인트:
- * - 웹 페이지: 사용자 정보 입력/수정 폼, 메인 대시보드
- * - API: JWT 토큰 발급/갱신, 현재 사용자 정보 조회
- */
 @Controller
 @RequiredArgsConstructor
 public class UserController {
@@ -89,35 +76,20 @@ public class UserController {
 
         Optional<User> userOptional = appUserRepository.findByProviderAndUserid(provider, socialId);
         if (userOptional.isEmpty()) {
-            // 신규 사용자라면 userinfo로 리다이렉트 (보통 여기 오진 않음)
-            return "redirect:/userinfo?socialId=" + socialId + "&provider=" + provider;
+            // 신규 사용자라면 user-info로 리다이렉트
+            return "redirect:/user-info?socialId=" + socialId + "&provider=" + provider;
         }
         User user = userOptional.get();
         model.addAttribute("user", user);
         return "success";  // src/main/resources/templates/success.html
     }
 
-    //신규회원 입력 폼
-    @GetMapping("/additional-info-form")
-    public String additionalInfoForm(@RequestParam String socialId, @RequestParam String provider, Model model) {
-        User user = new User();
-        user.setUserid(socialId);
-        user.setProvider(provider);
-        model.addAttribute("user", user);
-        return "additional-info-form";
-    }
-    //회원 정보 수정 저장
-    @PostMapping("/user-info")
-    public String saveUserInfo(@ModelAttribute User user, @RequestParam("profileImage") MultipartFile profileImage) {
-        userService.updateUser(user, profileImage);
-        return "redirect:/success";
-    }
-    //기존 유저 정보수정
-    @GetMapping("/userinfo")
-    public String userInfoPage(@RequestParam(required = false) String socialId,
-                               @RequestParam(required = false) String provider,
-                               Authentication authentication,
-                               Model model) {
+    // 통합된 사용자 정보 관리 (신규/기존 모두 처리)
+    @GetMapping("/user-info")
+    public String userInfoForm(@RequestParam(required = false) String socialId,
+                              @RequestParam(required = false) String provider,
+                              Authentication authentication,
+                              Model model) {
         
         // 파라미터가 없는 경우 인증된 사용자 정보에서 가져오기
         if (socialId == null || provider == null) {
@@ -151,19 +123,32 @@ public class UserController {
             }
         }
         
+        // 기존 사용자 정보 조회
         Optional<User> userOptional = appUserRepository.findByProviderAndUserid(provider, socialId);
         if (userOptional.isPresent()) {
+            // 기존 사용자 - 정보 수정 모드
             model.addAttribute("user", userOptional.get());
+            model.addAttribute("isNewUser", false);
         } else {
-            // 신규 사용자 빈 User 객체 전달
+            // 신규 사용자 - 정보 입력 모드
             User newUser = new User();
             newUser.setUserid(socialId);
             newUser.setProvider(provider);
-            newUser.setAdmin(false); // 기본값으로 admin을 false로 설정
+            newUser.setAdmin(false);
             model.addAttribute("user", newUser);
+            model.addAttribute("isNewUser", true);
         }
-        return "userinfo";  // src/main/resources/templates/userinfo.html
+        
+        return "userinfo";  // 통합된 템플릿 사용
     }
+    
+    // 통합된 사용자 정보 저장 (신규/기존 모두 처리)
+    @PostMapping("/user-info")
+    public String saveUserInfo(@ModelAttribute User user, @RequestParam("profileImage") MultipartFile profileImage) {
+        userService.updateUser(user, profileImage);
+        return "redirect:/success";
+    }
+
 
     //사용자 정보 JSON반환
     @GetMapping("/api/current-user")

@@ -37,8 +37,8 @@ public class SecurityConfig {
                         // 공개 경로 (인증 불필요)
                         .requestMatchers("/", "/login", "/oauth2/**", "/error", "/loginFailure").permitAll()
                         // 인증 필요 경로
-                        .requestMatchers("/success", "/additional-info-form", "/userinfo", "/updateUserInfo", "/posts").authenticated()
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers("/success", "/user-info", "/posts").authenticated()
+                        .requestMatchers("/add-post", "/check-post/", "/delete-post/", "/search-post").authenticated()
                         // 기타 모든 경로 (인증 필요)
                         .anyRequest().authenticated()
                 )
