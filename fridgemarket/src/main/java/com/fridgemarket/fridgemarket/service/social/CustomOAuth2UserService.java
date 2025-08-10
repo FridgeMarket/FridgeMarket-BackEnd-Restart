@@ -1,96 +1,44 @@
 package com.fridgemarket.fridgemarket.service.social;
 
-import com.fridgemarket.fridgemarket.DAO.User;
-import com.fridgemarket.fridgemarket.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final AppUserRepository appUserRepository;
+    // Google 전용 OAuth2 서비스
+    private final GoogleOAuth2UserService googleOAuth2UserService;
+    // Kakao 전용 OAuth2 서비스
+    private final KakaoOAuth2UserService kakaoOAuth2UserService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User oauth2User = super.loadUser(userRequest);
-
+        // ========== 1. OAuth2 제공자 식별 ==========
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        String email = "";
-        String name = "";
-        String socialId = oauth2User.getName(); // This is the unique ID from the provider
+        
+        log.info("OAuth2 로그인 요청 - 제공자: {}", registrationId);
 
-        // 1. Extract user info based on provider
-        String profileUrl = "";
-        if ("google".equals(registrationId)) {
-            email = oauth2User.getAttribute("email");
-            name = oauth2User.getAttribute("name");
-            profileUrl = oauth2User.getAttribute("picture"); // Google 프로필 이미지 URL
-        } else if ("kakao".equals(registrationId)) {
-            Map<String, Object> kakaoAccount = oauth2User.getAttribute("kakao_account");
-            if (kakaoAccount != null) {
-                email = (String) kakaoAccount.get("email");
-                Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
-                if (profile != null) {
-                    name = (String) profile.get("nickname");
-                    profileUrl = (String) profile.get("profile_image_url"); // Kakao 프로필 이미지 URL
-                }
-            }
+
+        switch (registrationId.toLowerCase()) {
+            case "google": //구글일때
+                log.info("Google OAuth2 서비스로 위임");
+                return googleOAuth2UserService.loadUser(userRequest);
+                
+            case "kakao": //카카오일때
+                log.info("Kakao OAuth2 서비스로 위임");
+                return kakaoOAuth2UserService.loadUser(userRequest);
+                
+            default:
+                // 오류
+                log.error("지원하지 않는 OAuth2 제공자: {}", registrationId);
+                throw new OAuth2AuthenticationException("지원하지 않는 OAuth2 제공자입니다: " + registrationId);
         }
-
-        if (socialId == null || socialId.isEmpty()) {
-            throw new IllegalArgumentException("Social ID cannot be null or empty from " + registrationId);
-        }
-
-        String provider = userRequest.getClientRegistration().getRegistrationId();
-
-        // 2. Find or create user
-        Optional<User> userOptional = appUserRepository.findByProviderAndUserid(provider, socialId);
-        User appUser;
-        if (userOptional.isPresent()) {
-            appUser = userOptional.get();
-            // 기존 사용자의 경우 프로필 URL 업데이트 (소셜 로그인 시 최신 프로필 사진 반영)
-            if (profileUrl != null && !profileUrl.isEmpty()) {
-                appUser.setProfileurl(profileUrl);
-            }
-        } else {
-            appUser = new User();
-            appUser.setUserid(socialId);
-            appUser.setProvider(provider);
-            appUser.setEmail(email);
-            appUser.setName(name);
-            appUser.setProfileurl(profileUrl); // 새 사용자의 경우 프로필 URL 설정
-            appUser.setNickname(null);
-            appUser.setPhone("");
-            appUser.setAddress("");
-            appUser.setAgreed(false);
-        }
-
-        // 4. Save the user (either updated or new)
-        appUserRepository.save(appUser);
-
-        // 5. Return the principal (OAuth2User)
-        Map<String, Object> userAttributes = new HashMap<>(oauth2User.getAttributes());
-        userAttributes.put("provider", provider);
-        userAttributes.put("socialId", socialId);
-        userAttributes.put("id", socialId);
-
-        return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
-                userAttributes,
-                "id" // nameAttributeKey
-        );
     }
 }

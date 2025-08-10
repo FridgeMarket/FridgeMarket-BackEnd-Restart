@@ -2,14 +2,15 @@ package com.fridgemarket.fridgemarket.controller;
 
 import com.fridgemarket.fridgemarket.DAO.Post;
 import com.fridgemarket.fridgemarket.DAO.User;
+import com.fridgemarket.fridgemarket.config.JwtAuthenticationFilter;
 import com.fridgemarket.fridgemarket.service.PostService;
 import com.fridgemarket.fridgemarket.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -20,46 +21,50 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+/*
+ * 제공 API:
+ * - POST /api/posts/add-post: 게시글 작성
+ * - GET /api/posts/check-post/{id}: 게시글 조회
+ * - PUT /api/posts/update-post/{id}: 게시글 수정
+ * - DELETE /api/posts/delete-post/{id}: 게시글 삭제
+ * - GET /api/posts/search-post: 게시글 검색
+ * - POST /api/posts/upload-image: 이미지 업로드
+ */
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
 
+    // 게시글 서비스 (의존성 주입)
     @Autowired
     private PostService postService;
 
+    // 사용자 서비스 (의존성 주입)
     @Autowired
     private UserService userService;
 
+    // 파일 업로드 경로 설정 (application.yml에서 주입)
     @Value("${file.upload.path:uploads/}")
     private String uploadPath;
 
-    private User getCurrentUser(OAuth2User oauth2User) {
-        if (oauth2User == null) {
-            return null; // Or throw an exception for unauthenticated user
-        }
-        
-        // OAuth2User에서 provider와 socialId 정보를 가져옴
-        String provider = oauth2User.getAttribute("provider");
-        String socialId = oauth2User.getAttribute("socialId");
-        
-        // provider와 socialId가 없는 경우 name을 socialId로 사용
-        if (provider == null || socialId == null) {
-            socialId = oauth2User.getName();
-            // provider는 CustomOAuth2UserService에서 설정된 값을 사용
-            provider = oauth2User.getAttribute("provider");
-        }
-        
-        if (socialId == null) {
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
         
-        return userService.findByProviderAndSocialId(provider, socialId).orElse(null);
+        // JWT 토큰으로만 인증 허용
+        if (authentication.getDetails() instanceof JwtAuthenticationFilter.JwtUserDetails) {
+            JwtAuthenticationFilter.JwtUserDetails jwtDetails = (JwtAuthenticationFilter.JwtUserDetails) authentication.getDetails();
+            return userService.findByProviderAndSocialId(jwtDetails.getProvider(), jwtDetails.getSocialId()).orElse(null);
+        }
+        
+        // OAuth2 인증은 허용하지 않음 (JWT 토큰 필요)
+        return null;
     }
 
     @PostMapping("/add-post")
-    public ResponseEntity<Post> addPost(@RequestBody Post post, @AuthenticationPrincipal OAuth2User oauth2User) {
-        User currentUser = getCurrentUser(oauth2User);
+    public ResponseEntity<Post> addPost(@RequestBody Post post) {
+        User currentUser = getCurrentUser();
         if (currentUser == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
@@ -76,13 +81,12 @@ public class PostController {
     }
 
     @PutMapping("/update-post/{id}")
-    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post postDetails, @AuthenticationPrincipal OAuth2User oauth2User) {
-        User currentUser = getCurrentUser(oauth2User);
+    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post postDetails) {
+        User currentUser = getCurrentUser();
         if (currentUser == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         
-        // ID 검증
         if (id == null || id <= 0) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -98,13 +102,12 @@ public class PostController {
     }
 
     @DeleteMapping("/delete-post/{id}")
-    public ResponseEntity<HttpStatus> deletePost(@PathVariable Long id, @AuthenticationPrincipal OAuth2User oauth2User) {
-        User currentUser = getCurrentUser(oauth2User);
+    public ResponseEntity<HttpStatus> deletePost(@PathVariable Long id) {
+        User currentUser = getCurrentUser();
         if (currentUser == null) {
             return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
         }
         
-        // ID 검증
         if (id == null || id <= 0) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -127,25 +130,20 @@ public class PostController {
         
         List<Post> posts;
         
-        // 카테고리와 상태가 모두 지정된 경우
         if (category != null && !category.isEmpty() && status != null && !status.isEmpty()) {
             Boolean statusBoolean = Boolean.parseBoolean(status);
             posts = postService.getPostsByCategoryAndStatus(category, statusBoolean);
         }
-        // 카테고리만 지정된 경우
         else if (category != null && !category.isEmpty()) {
             posts = postService.getPostsByCategory(category);
         }
-        // 상태만 지정된 경우
         else if (status != null && !status.isEmpty()) {
             Boolean statusBoolean = Boolean.parseBoolean(status);
             posts = postService.getPostsByStatus(statusBoolean);
         }
-        // 검색어만 지정된 경우
         else if (query != null && !query.isEmpty()) {
             posts = postService.searchPosts(query);
         }
-        // 아무것도 지정되지 않은 경우
         else {
             posts = postService.getAllPosts();
         }
@@ -186,27 +184,22 @@ public class PostController {
     @PostMapping("/upload-image")
     public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
-            // 파일 확장자 검증
             String originalFilename = file.getOriginalFilename();
             if (originalFilename == null || !isValidImageFile(originalFilename)) {
                 return ResponseEntity.badRequest().body("Invalid image file");
             }
 
-            // 업로드 디렉토리 생성
             Path uploadDir = Paths.get(uploadPath);
             if (!Files.exists(uploadDir)) {
                 Files.createDirectories(uploadDir);
             }
 
-            // 고유한 파일명 생성
             String fileExtension = getFileExtension(originalFilename);
             String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
             
-            // 파일 저장
             Path filePath = uploadDir.resolve(uniqueFilename);
             Files.copy(file.getInputStream(), filePath);
 
-            // URL 반환
             String imageUrl = "/uploads/" + uniqueFilename;
             return ResponseEntity.ok(imageUrl);
 

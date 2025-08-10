@@ -104,17 +104,15 @@
 </head>
 <body>
 <div class="container">
-    <form th:action="@{/updateUserInfo}" method="post" th:object="${user}" enctype="multipart/form-data">
+    <form th:action="@{/user-info}" method="post" th:object="${user}" enctype="multipart/form-data">
         <h1>회원 정보 관리</h1>
         
         <!-- 프로필 이미지 표시 -->
-        <div class="profile-image" th:if="${user.profileurl}">
+        <div class="profile-image" th:if="${user.profileurl != null and user.profileurl != ''}">
             <img th:src="${user.profileurl}" alt="프로필 사진" id="currentProfileImage" />
         </div>
-        <div class="profile-image" th:unless="${user.profileurl}">
-            <div class="default-avatar" id="currentProfileImage">
-                <span th:text="${#strings.substring(user.nickname ?: user.name, 0, 1)}">U</span>
-            </div>
+        <div class="profile-image" th:unless="${user.profileurl != null and user.profileurl != ''}">
+            <img src="/images/FridgeMarketIcon.png" alt="기본 프로필 사진" id="currentProfileImage" />
         </div>
         
         <!-- 프로필 사진 업로드 -->

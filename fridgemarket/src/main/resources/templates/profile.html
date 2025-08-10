@@ -9,11 +9,11 @@
 
 <form th:action="@{/profile/update}" method="post" th:object="${user}" enctype="multipart/form-data">
 
-    <div th:if="${user.profileurl != null and user.profileurl != ''}">
+    <div th:if="${user.profileurl != null and user.profileurl != '' and user.profileurl != '/images/FridgeMarketIcon.png'}">
         <img th:src="@{${user.profileurl}}" alt="현재 프로필 사진" width="150">
         <br>
     </div>
-    <div th:unless="${user.profileurl != null and user.profileurl != ''}">
+    <div th:unless="${user.profileurl != null and user.profileurl != '' and user.profileurl != '/images/FridgeMarketIcon.png'}">
         <img th:src="@{/images/FridgeMarketIcon.png}" alt="기본 프로필 사진" width="150">
         <br>
     </div>

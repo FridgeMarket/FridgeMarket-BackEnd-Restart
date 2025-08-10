@@ -12,7 +12,7 @@
     <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">추가 정보 입력</h2>
     <p class="text-gray-600 text-center mb-4">서비스 이용을 위해 추가 정보를 입력해주세요.</p>
 
-    <form th:action="@{/save-additional-info}" method="post" enctype="multipart/form-data" class="space-y-4">
+    <form th:action="@{/user-info}" method="post" enctype="multipart/form-data" class="space-y-4">
         <div>
             <label for="nickname" class="block text-sm font-medium text-gray-700">닉네임</label>
             <input type="text" id="nickname" name="nickname" th:value="${appUser.nickname}" required
