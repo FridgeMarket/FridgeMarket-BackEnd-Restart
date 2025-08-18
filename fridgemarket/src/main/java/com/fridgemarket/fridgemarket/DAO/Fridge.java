@@ -34,4 +34,10 @@ public class Fridge {
     @Column(name = "registered_at")
     private Date registeredat;
 
+    @Column(name = "expiration_date") // 유통기한 추가
+    private Date expirationdate;
+
+    @Column(name = "unit") // 단위 추고
+    private String unit;
+
 }

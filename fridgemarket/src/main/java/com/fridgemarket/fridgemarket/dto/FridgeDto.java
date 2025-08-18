@@ -1,5 +1,6 @@
 package com.fridgemarket.fridgemarket.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,8 @@ public class FridgeDto {
     private String tag;
     private Long amount;
     private Date registeredat;
+    private Date expirationdate;
+    private String unit;
     
     // 생성용 DTO (ID 제외)
     @NoArgsConstructor
@@ -25,6 +28,9 @@ public class FridgeDto {
         private String foodname;
         private String tag;
         private Long amount;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+        private Date expirationdate;
+        private String unit;
         
         // Getter, Setter
         public String getFoodname() { return foodname; }
@@ -35,6 +41,12 @@ public class FridgeDto {
         
         public Long getAmount() { return amount; }
         public void setAmount(Long amount) { this.amount = amount; }
+
+        public Date getExpirationdate() { return expirationdate; }
+        public void setExpirationdate(Date expirationdate) { this.expirationdate = expirationdate; }
+
+        public String getUnit() { return unit; }
+        public void setUnit(String unit) { this.unit = unit; }
     }
     
     // 수정용 DTO
@@ -44,6 +56,9 @@ public class FridgeDto {
         private String foodname;
         private String tag;
         private Long amount;
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+        private Date expirationdate;
+        private String unit;
         
         // Getter, Setter
         public String getFoodname() { return foodname; }
@@ -54,5 +69,11 @@ public class FridgeDto {
         
         public Long getAmount() { return amount; }
         public void setAmount(Long amount) { this.amount = amount; }
+
+        public Date getExpirationdate() { return expirationdate; }
+        public void setExpirationdate(Date expirationdate) { this.expirationdate = expirationdate; }
+
+        public String getUnit() { return unit; }
+        public void setUnit(String unit) { this.unit = unit; }
     }
 }

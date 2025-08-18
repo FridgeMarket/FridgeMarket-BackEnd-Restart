@@ -34,6 +34,8 @@ public class FridgeService {
         fridge.setTag(request.getTag());
         fridge.setAmount(request.getAmount());
         fridge.setRegisteredat(new Date());
+        fridge.setExpirationdate(request.getExpirationdate());
+        fridge.setUnit(request.getUnit());
         
         Fridge savedFridge = fridgeRepository.save(fridge);
         return convertToDto(savedFridge);
@@ -96,6 +98,14 @@ public class FridgeService {
             System.out.println("  - 수량 변경: " + fridge.getAmount() + " → " + request.getAmount());
             fridge.setAmount(request.getAmount());
         }
+        if (request.getExpirationdate() != null) {
+            System.out.println("  - 유통기한 변경: " + fridge.getExpirationdate() + " → " + request.getExpirationdate());
+            fridge.setExpirationdate(request.getExpirationdate());
+        }
+        if (request.getUnit() != null) {
+            System.out.println("  - 단위 변경: " + fridge.getUnit() + " → " + request.getUnit());
+            fridge.setUnit(request.getUnit());
+        }
         
         Fridge updatedFridge = fridgeRepository.save(fridge);
         System.out.println("✅ 재료 수정 완료:");
@@ -144,7 +154,9 @@ public class FridgeService {
             fridge.getFoodname(),
             fridge.getTag(),
             fridge.getAmount(),
-            fridge.getRegisteredat()
+            fridge.getRegisteredat(),
+            fridge.getExpirationdate(),
+            fridge.getUnit()
         );
     }
 }
