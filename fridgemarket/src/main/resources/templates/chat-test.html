@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat API Test</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin: 24px; }
+    h2 { margin-top: 32px; }
+    .row { display: flex; gap: 12px; align-items: center; margin: 8px 0; flex-wrap: wrap; }
+    input[type="text"], textarea { width: 360px; max-width: 100%; padding: 8px; }
+    textarea { height: 80px; }
+    button { padding: 8px 14px; cursor: pointer; }
+    .section { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 16px 0; }
+    pre { background: #111; color: #0f0; padding: 12px; overflow: auto; border-radius: 6px; max-height: 360px; }
+    .hint { color: #555; font-size: 12px; }
+    .ok { color: #0a7; }
+    .err { color: #c22; }
+  </style>
+</head>
+<body>
+  <h1>Chat API Test</h1>
+  <p class="hint">JWT Access Token을 입력한 뒤, 쪽지 API를 테스트해 보세요.</p>
+
+  <div class="section">
+    <h2>1) 토큰</h2>
+    <div class="row">
+      <label for="token">Access Token</label>
+      <input id="token" type="text" placeholder="Bearer 없이 순수 토큰만 입력" />
+      <button id="saveToken">저장</button>
+      <span id="tokenSaved" class="ok" style="display:none;">저장됨</span>
+    </div>
+    <div class="hint">토큰은 localStorage에 저장됩니다.</div>
+  </div>
+
+  <div class="section">
+    <h2>2) 쪽지 보내기</h2>
+    <div class="row">
+      <input id="receiver" type="text" placeholder="수신자 닉네임" />
+    </div>
+    <div class="row">
+      <textarea id="content" placeholder="메시지 내용"></textarea>
+    </div>
+    <div class="row">
+      <button id="send">쪽지 보내기</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>3) 쪽지함</h2>
+    <div class="row">
+      <button id="inbox">받은 쪽지함</button>
+      <button id="sent">보낸 쪽지함</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>4) 단건/답장/삭제</h2>
+    <div class="row">
+      <input id="chatNum" type="text" placeholder="chat_num (예: 123)" />
+    </div>
+    <div class="row">
+      <button id="check">쪽지 상세 조회</button>
+    </div>
+    <div class="row">
+      <textarea id="replyContent" placeholder="답장 내용"></textarea>
+    </div>
+    <div class="row">
+      <button id="reply">답장 보내기</button>
+      <button id="del" style="margin-left: 6px;">쪽지 삭제</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>결과</h2>
+    <pre id="out">여기에 응답이 표시됩니다</pre>
+  </div>
+
+  <script>
+    const BASE = '';
+
+    const $ = (id) => document.getElementById(id);
+    const out = $("out");
+
+    function getToken() {
+      const t = $("token").value.trim();
+      return t || localStorage.getItem('access_token') || '';
+    }
+
+    function setToken(t) {
+      localStorage.setItem('access_token', t || '');
+    }
+
+    function log(obj) {
+      out.textContent = (typeof obj === 'string') ? obj : JSON.stringify(obj, null, 2);
+    }
+
+    async function req(method, url, body) {
+      const token = getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const res = await fetch(BASE + url, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      let data;
+      try { data = await res.json(); } catch (_) { data = await res.text(); }
+      if (!res.ok) throw { status: res.status, data };
+      return data;
+    }
+
+    // init
+    (function init() {
+      $("token").value = localStorage.getItem('access_token') || '';
+    })();
+
+    // token
+    $("saveToken").addEventListener('click', () => {
+      setToken($("token").value.trim());
+      $("tokenSaved").style.display = 'inline';
+      setTimeout(() => $("tokenSaved").style.display = 'none', 1200);
+    });
+
+    // send
+    $("send").addEventListener('click', async () => {
+      try {
+        const receiver = $("receiver").value.trim();
+        const content = $("content").value.trim();
+        const res = await req('POST', '/api/chats', { receiverNickname: receiver, content });
+        log(res);
+      } catch (e) { log(e); }
+    });
+
+    // inbox
+    $("inbox").addEventListener('click', async () => {
+      try { log(await req('GET', '/api/chats/receive-message')); }
+      catch (e) { log(e); }
+    });
+
+    // sent
+    $("sent").addEventListener('click', async () => {
+      try { log(await req('GET', '/api/chats/send-message')); }
+      catch (e) { log(e); }
+    });
+
+    // check
+    $("check").addEventListener('click', async () => {
+      try {
+        const n = $("chatNum").value.trim();
+        log(await req('GET', `/api/chats/check-message/${n}`));
+      } catch (e) { log(e); }
+    });
+
+    // reply
+    $("reply").addEventListener('click', async () => {
+      try {
+        const n = $("chatNum").value.trim();
+        const content = $("replyContent").value.trim();
+        log(await req('POST', `/api/chats/reply/${n}`, { content }));
+      } catch (e) { log(e); }
+    });
+
+    // delete
+    $("del").addEventListener('click', async () => {
+      try {
+        const n = $("chatNum").value.trim();
+        await req('DELETE', `/api/chats/delete-message/${n}`);
+        log('삭제됨');
+      } catch (e) { log(e); }
+    });
+  </script>
+</body>
+</html>
+
+

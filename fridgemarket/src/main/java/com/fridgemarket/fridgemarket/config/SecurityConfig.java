@@ -25,24 +25,38 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                               CustomOAuth2UserService customOAuth2UserService,
-                                               CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
-                                               OAuth2AuthorizedClientService authorizedClientService) throws Exception {
+                                                   CustomOAuth2UserService customOAuth2UserService,
+                                                   CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler,
+                                                   OAuth2AuthorizedClientService authorizedClientService) throws Exception {
         http
                 // ========== 1. CSRF 보호 설정 ==========
                 .csrf(csrf -> csrf.disable()) // 개발 환경에서 편의를 위해 CSRF 비활성화
-                
+
                 // url별 설정
                 .authorizeHttpRequests(authorize -> authorize
                         // 공개 경로 (인증 불필요)
-                        .requestMatchers("/", "/login", "/oauth2/**", "/error", "/loginFailure").permitAll()
-                        // 인증 필요 경로
-                        .requestMatchers("/success", "/user-info", "/posts").authenticated()
-                        .requestMatchers("/add-post", "/check-post/", "/delete-post/", "/search-post").authenticated()
+                        .requestMatchers("/", "/login", "/oauth2/**", "/error", "/loginFailure", "/check-nickname", "/posts", "/add-post", "/api/token", "/api/auth/kakao").permitAll()
+                        // /api/auth/kakao: iOS 앱에서 카카오 액세스 토큰을 받아서 JWT 토큰을 발급받는 엔드포인트
+                        
+                        // iOS 앱용 공개 API (인증 불필요)
+                        .requestMatchers("/api/login-status", "/api/posts-page", "/api/chat-page").permitAll()
+                        
+                        // 웹용 인증 필요 경로
+                        .requestMatchers("/success", "/user-info").authenticated()
+                        .requestMatchers("/check-post/", "/delete-post/", "/search-post").authenticated()
+                        
+                        // iOS 앱용 인증 필요 API (JWT 토큰 필요)
+                        .requestMatchers("/api/user-profile", "/api/current-user", "/api/token/refresh").authenticated()
+                        .requestMatchers("/api/fridge/**").authenticated()
+                        .requestMatchers("/api/chats/**").authenticated()
+                        
+                        // 냉장고 관련 API (JWT 토큰 필요)
+                        .requestMatchers("/add-food", "/check-fridge/**", "/update-fridge/**", "/delete-food/**", "/tag/**", "/search").authenticated()
+                        
                         // 기타 모든 경로 (인증 필요)
                         .anyRequest().authenticated()
                 )
-                
+
                 //소셜로그인
                 .oauth2Login(oauth2 -> oauth2
                         .loginPage("/login") // 로그인 페이지
@@ -52,14 +66,14 @@ public class SecurityConfig {
                         .failureUrl("/loginFailure") // 로그인 실패 시 리다이렉트 URL
                         .authorizedClientService(authorizedClientService) // OAuth2 인증된 클라이언트 서비스
                 )
-                
+
                 // 세션관리 설정
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // OAuth2 로그인을 위해 필요할 경우 세션 만듬
                         .maximumSessions(1) // 동시 세션 수 제한
                         .maxSessionsPreventsLogin(false) // 다른 곳에서 로그인을 하면 이전 로그인 위치는 로그아웃됨
                 )
-                
+
                 // ID/PW 인증 필터(폼 로그인)보다 먼저 우리 JWT 필터를 실행합니다.
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // JWT 필터를 기본 인증 필터보다 먼저 실행
 

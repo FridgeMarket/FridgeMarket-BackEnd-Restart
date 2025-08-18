@@ -46,6 +46,11 @@ public class UserService {
         return userRepository.findByUserid(userId).orElse(null);
     }
 
+    //닉네임으로 사용자 찾기
+    public User findByNickname(String nickname) {
+        return userRepository.findByNickname(nickname).orElse(null);
+    }
+
     //사용자 정보 저장 및 업데이트
     @Transactional
     public void updateUser(User user, MultipartFile profileImage) {
@@ -65,7 +70,7 @@ public class UserService {
         userToUpdate.setAddress(user.getAddress());
         userToUpdate.setAgreed(user.getAgreed());
         userToUpdate.setBirth(user.getBirth());
-
+        userToUpdate.setIsRegistered(true);
         if (profileImage != null && !profileImage.isEmpty()) {
             try {
                 String filename = UUID.randomUUID().toString() + "_" + profileImage.getOriginalFilename();

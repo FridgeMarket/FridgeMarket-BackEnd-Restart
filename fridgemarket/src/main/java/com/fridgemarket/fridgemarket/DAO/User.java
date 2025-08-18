@@ -13,9 +13,11 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+
 @Table(name = "User")
 public class User {
-    @Id@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_num")
     private Long usernum;
 
@@ -54,4 +56,7 @@ public class User {
 
     @Column(name = "admin")
     private Boolean admin;
+
+    @Column(name = "is_registered")
+    private Boolean isRegistered = false;
 }

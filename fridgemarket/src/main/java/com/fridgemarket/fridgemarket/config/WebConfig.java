@@ -1,6 +1,7 @@
 package com.fridgemarket.fridgemarket.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -38,5 +39,16 @@ public class WebConfig implements WebMvcConfigurer {
         // ========== 업로드 파일 접근 설정 ==========
         registry.addResourceHandler("/uploads/**") // 웹에서 접근할 URL 패턴
                 .addResourceLocations("file:uploads/"); // 실제 파일이 저장된 디렉토리 경로
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        // ========== CORS 설정 (iOS 앱 연동용) ==========
+        registry.addMapping("/**")
+                .allowedOriginPatterns("*")  // 모든 도메인 허용 (개발용)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600); // 1시간
     }
 }
