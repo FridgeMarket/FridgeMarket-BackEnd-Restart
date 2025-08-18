@@ -39,6 +39,7 @@ public class TokenResponse {
         private String email;
         private String provider;
         private String profileUrl;
+        private boolean isRegistered;
     }
     
     // 편의 생성자 - 토큰과 사용자 정보만으로 생성

@@ -15,5 +15,3 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
     // 보낸 쪽지함: 발신자 기준, 발신자가 삭제하지 않은 메시지만, 최신순
     List<Chat> findBySenderAndDeletedBySenderFalseOrderBySendtimeDesc(User sender);
 }
-
-

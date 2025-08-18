@@ -31,16 +31,13 @@ public class Fridge {
     @Column(name = "amount")
     private Long amount;
 
-    @Column(name = "is_opened")
-    private Boolean isopened;
-
-    @Column(name = "expiration_date_before_open")
-    private Date beforeopen;
-
-    @Column(name = "expiration_date_after_open")
-    private Date afteropen;
-
     @Column(name = "registered_at")
     private Date registeredat;
+
+    @Column(name = "expiration_date") // 유통기한 추가
+    private Date expirationdate;
+
+    @Column(name = "unit") // 단위 추고
+    private String unit;
 
 }

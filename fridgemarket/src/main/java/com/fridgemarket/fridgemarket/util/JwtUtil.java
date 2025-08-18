@@ -29,7 +29,7 @@ public class JwtUtil {
     }
 
     //AT생성
-    public String generateAccessToken(Long userNum, String provider, String socialId) {
+    public String generateAccessToken(Long userNum, String provider, String socialId , boolean isRegistered) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + accessTokenExpiration);
 
@@ -37,6 +37,7 @@ public class JwtUtil {
                 .setSubject(userNum.toString()) // 사용자 고유 번호를 subject로 설정
                 .claim("provider", provider) // OAuth2 제공자 (google, kakao)
                 .claim("socialId", socialId) // 소셜 로그인 ID
+                .claim("isRegistered" , isRegistered)
                 .claim("type", "access") // 토큰 타입 구분
                 .setIssuedAt(now) // 발급 시간
                 .setExpiration(expiration) // 만료 시간

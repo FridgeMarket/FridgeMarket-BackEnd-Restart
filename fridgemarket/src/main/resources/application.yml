@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/fridgemarket
     username: root
-    password: donghwan02
+    password: soojong9627
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -64,6 +64,4 @@ jwt:
   secret: fridgemarket-jwt-secret-key-for-token-generation-and-validation-very-long-secret
   access-token-expiration: 1800000  # 30분 (30 * 60 * 1000)
   refresh-token-expiration: 604800000  # 7일 (7 * 24 * 60 * 60 * 1000)
-
-
 

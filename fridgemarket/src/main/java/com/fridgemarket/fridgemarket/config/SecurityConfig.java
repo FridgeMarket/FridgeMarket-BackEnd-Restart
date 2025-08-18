@@ -35,10 +35,24 @@ public class SecurityConfig {
                 // url별 설정
                 .authorizeHttpRequests(authorize -> authorize
                         // 공개 경로 (인증 불필요)
-                        .requestMatchers("/", "/login", "/oauth2/**", "/error", "/loginFailure", "/check-nickname", "/posts", "/add-post", "/api/token").permitAll()
-                        // 인증 필요 경로
+                        .requestMatchers("/", "/login", "/oauth2/**", "/error", "/loginFailure", "/check-nickname", "/posts", "/add-post", "/api/token", "/api/auth/kakao").permitAll()
+                        // /api/auth/kakao: iOS 앱에서 카카오 액세스 토큰을 받아서 JWT 토큰을 발급받는 엔드포인트
+                        
+                        // iOS 앱용 공개 API (인증 불필요)
+                        .requestMatchers("/api/login-status", "/api/posts-page", "/api/chat-page").permitAll()
+                        
+                        // 웹용 인증 필요 경로
                         .requestMatchers("/success", "/user-info").authenticated()
-                        .requestMatchers( "/check-post/", "/delete-post/", "/search-post").authenticated()
+                        .requestMatchers("/check-post/", "/delete-post/", "/search-post").authenticated()
+                        
+                        // iOS 앱용 인증 필요 API (JWT 토큰 필요)
+                        .requestMatchers("/api/user-profile", "/api/current-user", "/api/token/refresh").authenticated()
+                        .requestMatchers("/api/fridge/**").authenticated()
+                        .requestMatchers("/api/chats/**").authenticated()
+                        
+                        // 냉장고 관련 API (JWT 토큰 필요)
+                        .requestMatchers("/add-food", "/check-fridge/**", "/update-fridge/**", "/delete-food/**", "/tag/**", "/search").authenticated()
+                        
                         // 기타 모든 경로 (인증 필요)
                         .anyRequest().authenticated()
                 )

@@ -41,15 +41,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-/*
- * 제공 API:
- * - POST /api/posts/add-post: 게시글 작성
- * - GET /api/posts/check-post/{id}: 게시글 조회
- * - PUT /api/posts/update-post/{id}: 게시글 수정
- * - DELETE /api/posts/delete-post/{id}: 게시글 삭제
- * - GET /api/posts/search-post: 게시글 검색
- * - POST /api/posts/upload-image: 이미지 업로드
- */
 @RestController
 public class PostController {
 
@@ -118,7 +109,7 @@ public class PostController {
      * - path 변수 id와 본문 postDetails를 받아 서비스에서 작성자 권한 검증 후 수정
      * - 200(성공), 400(잘못된 요청), 401(미인증), 403(권한없음), 404(없음)
      */
-    @PutMapping("/update-post/{id}")
+    @PatchMapping("/update-post/{id}")
     public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post postDetails) {
         User currentUser = getCurrentUser();
         if (currentUser == null) {

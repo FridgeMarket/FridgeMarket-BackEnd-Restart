@@ -56,4 +56,7 @@ public class User {
 
     @Column(name = "admin")
     private Boolean admin;
+
+    @Column(name = "is_registered")
+    private Boolean isRegistered = false;
 }

@@ -69,7 +69,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                 User existingUser = userOptional.get();
 
                 // JWT AccessToken / RefreshToken 생성
-                String accessToken = jwtUtil.generateAccessToken(existingUser.getUsernum(), provider, socialId);
+                String accessToken = jwtUtil.generateAccessToken(existingUser.getUsernum(), provider, socialId , existingUser.getIsRegistered());
                 String refreshToken = jwtUtil.generateRefreshToken(existingUser.getUsernum());
 
                 // DB에 JWT RefreshToken 저장

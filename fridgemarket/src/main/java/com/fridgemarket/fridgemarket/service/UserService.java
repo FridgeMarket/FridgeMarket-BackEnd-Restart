@@ -70,7 +70,7 @@ public class UserService {
         userToUpdate.setAddress(user.getAddress());
         userToUpdate.setAgreed(user.getAgreed());
         userToUpdate.setBirth(user.getBirth());
-
+        userToUpdate.setIsRegistered(true);
         if (profileImage != null && !profileImage.isEmpty()) {
             try {
                 String filename = UUID.randomUUID().toString() + "_" + profileImage.getOriginalFilename();
@@ -105,4 +105,3 @@ public class UserService {
 
         userRepository.save(user);
     }
-}

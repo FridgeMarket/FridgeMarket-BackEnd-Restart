@@ -73,5 +73,3 @@ function Delete-Chat {
 
 # 6) Delete a message
 # Delete-Chat -ChatNum $CHAT_NUM
-
-
