@@ -1,5 +1,25 @@
 package com.fridgemarket.fridgemarket.controller;
 
+/**
+ * 게시글 CRUD, 검색, 이미지 업로드를 처리하는 REST 컨트롤러.
+ *
+ * 인증 정책
+ * - 작성/수정/삭제는 JWT 기반 인증만 허용(SecurityContext의 JwtUserDetails 필요)
+ * - 조회/검색은 공개 혹은 보안 설정에 따름
+ *
+ * 제공 API
+ * - POST /add-post                : 게시글 작성(인증 필요)
+ * - GET  /check-post/{id}         : 게시글 단건 조회
+ * - PUT  /update-post/{id}        : 게시글 수정(작성자 권한, 인증 필요)
+ * - DELETE /delete-post/{id}      : 게시글 삭제(작성자 권한, 인증 필요)
+ * - GET  /search-post             : 게시글 검색(쿼리/카테고리/상태 조합)
+ * - GET  /all                     : 전체 목록 조회
+ * - GET  /category/{category}     : 카테고리별 조회
+ * - GET  /status/{status}         : 상태별 조회
+ * - GET  /category/{c}/status/{s} : 카테고리+상태 조회
+ * - POST /upload-image            : 이미지 업로드 → 공개 URL 반환
+ */
+
 import com.fridgemarket.fridgemarket.DAO.Post;
 import com.fridgemarket.fridgemarket.DAO.User;
 import com.fridgemarket.fridgemarket.config.JwtAuthenticationFilter;
@@ -45,6 +65,11 @@ public class PostController {
     @Value("${file.upload.path:uploads/}")
     private String uploadPath;
 
+    /**
+     * 현재 요청의 JWT 인증 정보에서 사용자 객체를 조회하는 헬퍼
+     * - SecurityContext의 Authentication.details가 JwtUserDetails 여야 함
+     * - provider/socialId로 사용자 조회하여 반환, 미인증 시 null
+     */
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -61,6 +86,11 @@ public class PostController {
         return null;
     }
 
+    /**
+     * 게시글 작성
+     * - 본문으로 전달된 Post에 현재 사용자 설정 후 저장
+     * - 성공 시 201과 생성된 Post 반환, 미인증은 401
+     */
     @PostMapping("/add-post")
     public ResponseEntity<Post> addPost(@RequestBody Post post) {
         User currentUser = getCurrentUser();
@@ -72,6 +102,10 @@ public class PostController {
         return new ResponseEntity<>(newPost, HttpStatus.CREATED);
     }
 
+    /**
+     * 게시글 단건 조회
+     * - 존재하면 200과 Post, 없으면 404
+     */
     @GetMapping("/check-post/{id}")
     public ResponseEntity<Post> getPost(@PathVariable Long id) {
         Optional<Post> post = postService.getPost(id);
@@ -79,6 +113,11 @@ public class PostController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * 게시글 수정
+     * - path 변수 id와 본문 postDetails를 받아 서비스에서 작성자 권한 검증 후 수정
+     * - 200(성공), 400(잘못된 요청), 401(미인증), 403(권한없음), 404(없음)
+     */
     @PutMapping("/update-post/{id}")
     public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post postDetails) {
         User currentUser = getCurrentUser();
@@ -100,6 +139,11 @@ public class PostController {
         }
     }
 
+    /**
+     * 게시글 삭제
+     * - 작성자 본인만 삭제 가능
+     * - 204(성공), 400/401/403/404 상황별 반환
+     */
     @DeleteMapping("/delete-post/{id}")
     public ResponseEntity<HttpStatus> deletePost(@PathVariable Long id) {
         User currentUser = getCurrentUser();
@@ -121,6 +165,11 @@ public class PostController {
         }
     }
     //게시물 검색 기능
+    /**
+     * 게시글 검색
+     * - query(키워드), category(카테고리), status(상태: true/false)를 조합하여 검색
+     * - 파라미터 없으면 전체 조회
+     */
     @GetMapping("/search-post")
     public ResponseEntity<List<Post>> searchPosts(
             @RequestParam(required = false) String query,
@@ -150,27 +199,36 @@ public class PostController {
         return new ResponseEntity<>(posts, HttpStatus.OK);
     }
 
+    /**
+     * 전체 게시글 조회
+     */
     @GetMapping("/all")
     public ResponseEntity<List<Post>> getAllPosts() {
         List<Post> posts = postService.getAllPosts();
         return new ResponseEntity<>(posts, HttpStatus.OK);
     }
     
-    // 카테고리별 검색
+    /**
+     * 카테고리별 게시글 조회
+     */
     @GetMapping("/category/{category}")
     public ResponseEntity<List<Post>> getPostsByCategory(@PathVariable String category) {
         List<Post> posts = postService.getPostsByCategory(category);
         return new ResponseEntity<>(posts, HttpStatus.OK);
     }
     
-    // 상태별 검색
+    /**
+     * 상태별 게시글 조회
+     */
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Post>> getPostsByStatus(@PathVariable Boolean status) {
         List<Post> posts = postService.getPostsByStatus(status);
         return new ResponseEntity<>(posts, HttpStatus.OK);
     }
     
-    // 카테고리와 상태로 검색
+    /**
+     * 카테고리와 상태를 동시에 조건으로 조회
+     */
     @GetMapping("/category/{category}/status/{status}")
     public ResponseEntity<List<Post>> getPostsByCategoryAndStatus(
             @PathVariable String category, 
@@ -179,7 +237,12 @@ public class PostController {
         return new ResponseEntity<>(posts, HttpStatus.OK);
     }
 
-    // 이미지 업로드 엔드포인트
+    /**
+     * 이미지 업로드
+     * - 유효한 이미지 확장자만 허용
+     * - 저장소에 UUID 파일명으로 저장 후 공개 URL(`/uploads/**`) 반환
+     * - 저장 경로는 application.yml의 file.upload.path(기본값 uploads/)
+     */
     @PostMapping("/upload-image")
     public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) {
         try {

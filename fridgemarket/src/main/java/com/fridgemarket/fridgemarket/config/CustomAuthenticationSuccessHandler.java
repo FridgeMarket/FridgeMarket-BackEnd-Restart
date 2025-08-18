@@ -78,8 +78,8 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                 
                 //AT, RT 로그 출력
                 System.out.println("JWT 발급 완료");
-                System.out.println("AccessToken: " + accessToken.substring(0, 20) + "...");
-                System.out.println("RefreshToken: " + refreshToken.substring(0, 20) + "...");
+                System.out.println("AccessToken: " + accessToken);
+                System.out.println("RefreshToken: " + refreshToken);
 
                 // 메인 페이지로 이동
                 response.sendRedirect("/success");

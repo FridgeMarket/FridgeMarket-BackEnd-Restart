@@ -1,5 +1,21 @@
 package com.fridgemarket.fridgemarket.controller;
 
+/**
+ * 사용자 관련 화면 라우팅과 인증/토큰 관련 API를 제공하는 컨트롤러.
+ *
+ * 구성 요소
+ * - 로그인/성공 화면 라우팅
+ * - 사용자 정보 입력/수정 화면 및 저장
+ * - 현재 사용자 정보 조회(API)
+ * - JWT 발급 및 재발급(API)
+ * - 인증 상태/타입 디버깅용 API
+ *
+ * 인증 정책 개요
+ * - 화면 라우팅(`/login`, `/success`, `/user-info`)은 보안 설정에 따라 접근 가능
+ * - `/api/token`, `/api/token/refresh`는 JWT 기반 인증/검증을 통해 동작
+ * - OAuth2 인증 정보와 JWT 인증 정보를 모두 처리할 수 있도록 분기 처리되어 있음
+ */
+
 import com.fridgemarket.fridgemarket.DAO.User;
 import com.fridgemarket.fridgemarket.repository.AppUserRepository;
 import com.fridgemarket.fridgemarket.service.UserService;
@@ -29,6 +45,11 @@ public class UserController {
     private final JwtUtil jwtUtil;
 
     @GetMapping("/login")
+    /**
+     * 로그인 페이지 반환
+     * - GET /login
+     * - 뷰 템플릿: templates/login.html
+     */
     public String loginPage() {
         return "login";  // src/main/resources/templates/login.html
     }
@@ -36,6 +57,11 @@ public class UserController {
    //디버깅용 api
     @GetMapping("/api/debug-auth")
     @ResponseBody
+    /**
+     * 인증 객체의 존재/타입을 확인하기 위한 디버깅용 API
+     * - GET /api/debug-auth
+     * - 반환: 인증 여부와 Authentication 구현체 타입 문자열
+     */
     public ResponseEntity<String> debugAuth(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             return ResponseEntity.ok("인증됨: " + authentication.getName() + 
@@ -48,6 +74,11 @@ public class UserController {
     //OAuth2 디버깅 api
     @GetMapping("/api/debug-oauth2")
     @ResponseBody
+    /**
+     * OAuth2 인증 정보를 확인하는 디버깅용 API
+     * - GET /api/debug-oauth2
+     * - OAuth2가 아닌 인증이면 해당 사실을 문자열로 반환
+     */
     public ResponseEntity<String> debugOAuth2(Authentication authentication) {
         if (authentication != null && authentication.isAuthenticated()) {
             if (authentication instanceof org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken) {
@@ -69,6 +100,13 @@ public class UserController {
 
     //로그인 후 메인
     @GetMapping("/success")
+    /**
+     * 로그인 성공 후 메인 화면 라우팅
+     * - GET /success
+     * - OAuth2 인증 토큰에서 제공자/소셜ID 추출
+     * - 신규 사용자는 사용자 정보 입력 화면으로 리다이렉트
+     * - 기존 사용자는 사용자 정보를 모델에 담아 success 뷰 렌더링
+     */
     public String successPage(Authentication authentication, Model model) {
         OAuth2AuthenticationToken token = (OAuth2AuthenticationToken) authentication;
         String provider = token.getAuthorizedClientRegistrationId();
@@ -86,6 +124,14 @@ public class UserController {
 
     // 통합된 사용자 정보 관리 (신규/기존 모두 처리)
     @GetMapping("/user-info")
+    /**
+     * 사용자 정보 입력/수정 화면 라우팅(신규/기존 통합)
+     * - GET /user-info
+     * - 동작
+     *   1) 요청 파라미터에 provider/socialId가 없으면 인증 객체에서 추출(OAuth2 또는 JWT 모두 지원)
+     *   2) DB 조회 결과에 따라 신규/수정 모드로 `userinfo` 템플릿 렌더링
+     *   3) 비인증 상태 또는 식별 불가 시 /login 으로 리다이렉트
+     */
     public String userInfoForm(@RequestParam(required = false) String socialId,
                               @RequestParam(required = false) String provider,
                               Authentication authentication,
@@ -144,6 +190,12 @@ public class UserController {
     
     // 통합된 사용자 정보 저장 (신규/기존 모두 처리)
     @PostMapping("/user-info")
+    /**
+     * 사용자 정보 저장(신규/기존 통합)
+     * - POST /user-info
+     * - 폼 바인딩된 User와 프로필 이미지 파일을 서비스 계층으로 전달하여 저장
+     * - 처리 후 /success로 리다이렉트
+     */
     public String saveUserInfo(@ModelAttribute User user, @RequestParam("profileImage") MultipartFile profileImage) {
         userService.updateUser(user, profileImage);
         return "redirect:/success";
@@ -153,6 +205,12 @@ public class UserController {
     //사용자 정보 JSON반환
     @GetMapping("/api/current-user")
     @ResponseBody
+    /**
+     * 현재 로그인한 사용자 정보를 JSON으로 반환
+     * - GET /api/current-user
+     * - OAuth2 인증 전제(현재 구현상 JWT는 아님)
+     * - 존재하지 않으면 404, 미인증은 401
+     */
     public ResponseEntity<User> getCurrentUser(Authentication authentication) {
         if (authentication == null || !(authentication instanceof OAuth2AuthenticationToken)) {
             return ResponseEntity.status(401).build();
@@ -172,13 +230,39 @@ public class UserController {
 
     //게시판
     @GetMapping("/posts")
+    /**
+     * 게시판 기능 화면 라우팅
+     * - GET /posts
+     * - 뷰 템플릿: templates/post-crud.html
+     */
     public String postCrudPage() {
         return "post-crud"; // src/main/resources/templates/post-crud.html
+    }
+
+    // 쪽지 테스트 페이지 라우팅
+    @GetMapping("/chat-test")
+    /**
+     * 쪽지 API 테스트용 페이지 라우팅
+     * - GET /chat-test
+     * - 뷰 템플릿: templates/chat-test.html
+     */
+    public String chatTestPage() {
+        return "chat-test"; // src/main/resources/templates/chat-test.html
     }
 
     //토큰 만들고 json반환
     @GetMapping("/api/token")
     @ResponseBody
+    /**
+     * JWT AccessToken/RefreshToken 발급 API
+     * - GET /api/token
+     * - 인증: 반드시 JWT 기반(UsernamePasswordAuthenticationToken + JwtUserDetails)
+     * - 동작
+     *   1) SecurityContext에서 provider/socialId 추출
+     *   2) DB의 사용자 조회
+     *   3) RefreshToken은 기존 값 우선 사용(없으면 생성/저장), AccessToken은 매호출마다 새로 발급
+     *   4) TokenResponse(AT/RT/만료/사용자정보) 반환
+     */
     public ResponseEntity<TokenResponse> getToken(Authentication authentication) {
         System.out.println("=== getToken 메서드 호출 ===");
         System.out.println("Authentication: " + (authentication != null ? authentication.getClass().getSimpleName() : "null"));
@@ -265,6 +349,16 @@ public class UserController {
     // 토큰 재발급 at, rt
     @PostMapping("/api/token/refresh")
     @ResponseBody
+    /**
+     * JWT 토큰 재발급 API(AT/RT 동시 갱신)
+     * - POST /api/token/refresh
+     * - 요청 헤더: Authorization: Bearer <RefreshToken>
+     * - 동작
+     *   1) RT 유효성 검증 및 RT 타입 확인
+     *   2) RT의 userNum으로 사용자 조회 후 DB에 저장된 RT와 일치하는지 확인
+     *   3) 새 AT/RT 발급 및 RT 저장, TokenResponse 반환
+     * - 오류 상황: 401(검증 실패/불일치), 404(사용자 없음)
+     */
     public ResponseEntity<TokenResponse> refreshToken(@RequestHeader("Authorization") String refreshTokenHeader) {
         if (refreshTokenHeader == null || !refreshTokenHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(401).build();
