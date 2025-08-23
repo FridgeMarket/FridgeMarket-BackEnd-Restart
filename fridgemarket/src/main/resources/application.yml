@@ -3,9 +3,9 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/fridgemarket
-    username: root
-    password: soojong9627
+    url: jdbc:mysql://fridgemarket-db.cpqwik40yvy0.ap-northeast-2.rds.amazonaws.com/FridgeMarket_db
+    username: admin
+    password: qwer1234
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -71,3 +71,4 @@ url:
   username: admin
   password: qwer1234
   driver-class-name: com.mysql.cj.jdbc.Driver
+
