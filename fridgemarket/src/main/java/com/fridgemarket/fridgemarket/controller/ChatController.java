@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * - 받은 쪽지 클릭 시 닉네임/보낸 시간/내용 조회 + 답장 가능
  */
 @RestController
-@RequestMapping("/api/chats")
+@RequestMapping("")
 public class ChatController {
 
     private final ChatService chatService;
@@ -51,7 +51,7 @@ public class ChatController {
      * - body: { receiverNickname: String, content: String }
      * - sender는 현재 로그인 사용자
      */
-    @PostMapping
+    @PostMapping("/chat")
     public ResponseEntity<ChatDto> sendMessage(@RequestBody SendRequest request) {
         User sender = getCurrentUser();
         if (sender == null) {
@@ -74,7 +74,7 @@ public class ChatController {
     /**
      * 받은 쪽지함
      */
-    @GetMapping("/receive-message")
+    @GetMapping("/receive-chat")
     public ResponseEntity<List<ChatDto>> inbox() {
         User user = getCurrentUser();
         if (user == null) {
@@ -87,7 +87,7 @@ public class ChatController {
     /**
      * 보낸 쪽지함
      */
-    @GetMapping("/send-message")
+    @GetMapping("/send-chat")
     public ResponseEntity<List<ChatDto>> sent() {
         User user = getCurrentUser();
         if (user == null) {
@@ -101,7 +101,7 @@ public class ChatController {
      * 쪽지 상세 조회 (권한: 발신자 또는 수신자)
      * - 경로 변수 chat_num 로 특정 쪽지를 조회합니다.
      */
-    @GetMapping("/check-message/{chat_num}")
+    @GetMapping("/check-chat/{chat_num}")
     public ResponseEntity<ChatDto> getMessage(@PathVariable("chat_num") Long chatNum) {
         User user = getCurrentUser();
         if (user == null) {
@@ -140,7 +140,7 @@ public class ChatController {
     /**
      * 쪽지 삭제(소프트 삭제)
      */
-    @DeleteMapping("/delete-message/{chat_num}")
+    @DeleteMapping("/delete-chat/{chat_num}")
     public ResponseEntity<Void> delete(@PathVariable("chat_num") Long chatNum) {
         User user = getCurrentUser();
         if (user == null) {

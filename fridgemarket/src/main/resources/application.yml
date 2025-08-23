@@ -65,3 +65,9 @@ jwt:
   access-token-expiration: 1800000  # 30분 (30 * 60 * 1000)
   refresh-token-expiration: 604800000  # 7일 (7 * 24 * 60 * 60 * 1000)
 
+#AWS
+url:
+  jdbc: mysql://fridgemarket-db.cpqwik40yvy0.ap-northeast-2.rds.amazonaws.com/FridgeMarket_db
+  username: admin
+  password: qwer1234
+  driver-class-name: com.mysql.cj.jdbc.Driver
