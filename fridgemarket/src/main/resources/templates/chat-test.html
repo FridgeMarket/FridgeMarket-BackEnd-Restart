@@ -127,20 +127,20 @@
       try {
         const receiver = $("receiver").value.trim();
         const content = $("content").value.trim();
-        const res = await req('POST', '/api/chats', { receiverNickname: receiver, content });
+        const res = await req('POST', '/chat', { receiverNickname: receiver, content });
         log(res);
       } catch (e) { log(e); }
     });
 
     // inbox
     $("inbox").addEventListener('click', async () => {
-      try { log(await req('GET', '/api/chats/receive-message')); }
+      try { log(await req('GET', '/receive-chat')); }
       catch (e) { log(e); }
     });
 
     // sent
     $("sent").addEventListener('click', async () => {
-      try { log(await req('GET', '/api/chats/send-message')); }
+      try { log(await req('GET', '/send-chat')); }
       catch (e) { log(e); }
     });
 
@@ -148,7 +148,7 @@
     $("check").addEventListener('click', async () => {
       try {
         const n = $("chatNum").value.trim();
-        log(await req('GET', `/api/chats/check-message/${n}`));
+        log(await req('GET', `/check-chat/${n}`));
       } catch (e) { log(e); }
     });
 
@@ -157,7 +157,7 @@
       try {
         const n = $("chatNum").value.trim();
         const content = $("replyContent").value.trim();
-        log(await req('POST', `/api/chats/reply/${n}`, { content }));
+        log(await req('POST', `/reply/${n}`, { content }));
       } catch (e) { log(e); }
     });
 
@@ -165,7 +165,7 @@
     $("del").addEventListener('click', async () => {
       try {
         const n = $("chatNum").value.trim();
-        await req('DELETE', `/api/chats/delete-message/${n}`);
+        await req('DELETE', `/delete-chat/${n}`);
         log('삭제됨');
       } catch (e) { log(e); }
     });

@@ -35,7 +35,7 @@ public class UserService {
             throw new RuntimeException("Could not initialize storage", e);
         }
     }
-    
+
     //provider와 socialId로 사용자를 찾는 메서드
     public Optional<User> findByProviderAndSocialId(String provider, String socialId) {
         return userRepository.findByProviderAndUserid(provider, socialId);
@@ -56,7 +56,7 @@ public class UserService {
     public void updateUser(User user, MultipartFile profileImage) {
         Optional<User> existingUserOpt = userRepository.findByProviderAndUserid(user.getProvider(), user.getUserid());
         User userToUpdate;
-        
+
         if (existingUserOpt.isPresent()) {
             userToUpdate = existingUserOpt.get();
         } else {
@@ -75,9 +75,9 @@ public class UserService {
             try {
                 String filename = UUID.randomUUID().toString() + "_" + profileImage.getOriginalFilename();
                 Path destinationFile = this.rootLocation.resolve("profile_images").resolve(Paths.get(filename)).normalize().toAbsolutePath();
-                
+
                 profileImage.transferTo(destinationFile);
-                
+
                 userToUpdate.setProfileurl("/uploads/profile_images/" + filename);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to store file", e);
@@ -105,3 +105,4 @@ public class UserService {
 
         userRepository.save(user);
     }
+}

@@ -12,15 +12,18 @@ import java.util.Date;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class FridgeDto {
     private Long fridgenum;
     private String foodname;
     private String tag;
     private Long amount;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date registeredat;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private Date expirationdate;
     private String unit;
-    
+
     // 생성용 DTO (ID 제외)
     @NoArgsConstructor
     @AllArgsConstructor
