@@ -18,4 +18,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     
     // 카테고리와 상태로 검색
     List<Post> findByTagAndStatus(String tag, Boolean status);
+
+    // 사용자별 게시글 검색
+    List<Post> findByUser(com.fridgemarket.fridgemarket.DAO.User user);
+
+    // 사용자 ID로 게시글 검색
+    List<Post> findByUser_Usernum(Long usernum);
 }

@@ -94,4 +94,34 @@ public class PostService {
     public List<Post> getPostsByCategoryAndStatus(String category, Boolean status) {
         return postRepository.findByTagAndStatus(category, status);
     }
+    // 사용자별 게시글 조회
+    public List<Post> getPostsByUser(User user) {
+        return postRepository.findByUser(user);
+    }
+
+    // 게시글 상태만 업데이트 (나눔완료/나눔중)
+    public boolean updatePostStatus(Long id, Boolean status, User currentUser) {
+        Optional<Post> existingPostOptional = postRepository.findById(id);
+        if (existingPostOptional.isPresent()) {
+            Post existingPost = existingPostOptional.get();
+
+            // 작성자 본인만 상태 변경 가능
+            if (existingPost.getUser().getUsernum().equals(currentUser.getUsernum()) ||
+                    (currentUser.getAdmin() != null && currentUser.getAdmin())) {
+
+                existingPost.setStatus(status);
+                postRepository.save(existingPost);
+                return true;
+            } else {
+                throw new SecurityException("You are not authorized to update this post status.");
+            }
+        } else {
+            throw new IllegalArgumentException("Post not found with ID: " + id);
+        }
+    }
+
+    // userId로 사용자의 게시글 조회
+    public List<Post> getPostsByUserId(Long userId) {
+        return postRepository.findByUser_Usernum(userId);
+    }
 }

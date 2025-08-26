@@ -227,6 +227,66 @@ public class PostController {
         List<Post> posts = postService.getPostsByCategoryAndStatus(category, status);
         return new ResponseEntity<>(posts, HttpStatus.OK);
     }
+    /**
+     * 현재 로그인한 사용자가 작성한 게시글 조회
+     * - JWT 토큰을 통해 사용자 식별
+     * - 미인증 시 401 반환
+     */
+    @GetMapping("/api/my-posts")
+    public ResponseEntity<List<Post>> getMyPosts() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+        List<Post> myPosts = postService.getPostsByUser(currentUser);
+        return new ResponseEntity<>(myPosts, HttpStatus.OK);
+    }
+
+    /**
+     * 특정 사용자의 게시글 조회
+     * - GET /api/posts/user/{userId}
+     * - 공개적으로 접근 가능한 사용자의 게시글 목록 반환
+     */
+    @GetMapping("/api/posts/user/{userId}")
+    public ResponseEntity<List<Post>> getPostsByUserId(@PathVariable Long userId) {
+        try {
+            List<Post> posts = postService.getPostsByUserId(userId);
+            return new ResponseEntity<>(posts, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    /**
+     * 게시글 상태 업데이트 (나눔완료/나눔중)
+     * - 작성자만 상태 변경 가능
+     * - true: 나눔중, false: 나눔완료
+     */
+    @PutMapping("/api/posts/{id}/status")
+    public ResponseEntity<HttpStatus> updatePostStatus(@PathVariable Long id, @RequestBody java.util.Map<String, Boolean> statusUpdate) {
+        User currentUser = getCurrentUser();
+        if (currentUser == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+
+        if (id == null || id <= 0) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Boolean newStatus = statusUpdate.get("status");
+        if (newStatus == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            boolean updated = postService.updatePostStatus(id, newStatus, currentUser);
+            return updated ? new ResponseEntity<>(HttpStatus.OK) : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (SecurityException e) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
 
     /**
      * 이미지 업로드

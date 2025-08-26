@@ -703,4 +703,26 @@ public class UserController {
             return ResponseEntity.status(500).build(); // 500 Internal Server Error
         }
     }
+    /**
+     * 다른 사용자 프로필 조회
+     * - GET /api/users/{userId}
+     * - 공개적으로 접근 가능한 사용자 프로필 정보 반환
+     */
+    @GetMapping("/api/users/{userId}")
+    @ResponseBody
+    public ResponseEntity<Object> getUserById(@PathVariable Long userId) {
+        Optional<User> userOptional = appUserRepository.findById(userId);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+            // 공개할 정보만 반환 (민감한 정보 제외)
+            return ResponseEntity.ok(Map.of(
+                    "usernum", user.getUsernum(),
+                    "nickname", user.getNickname(),
+                    "profileurl", user.getProfileurl(),
+                    "provider", user.getProvider()
+            ));
+        } else {
+            return ResponseEntity.status(404).build();
+        }
+    }
 }
