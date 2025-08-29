@@ -91,6 +91,7 @@ public class UserController {
                         "email", user.getEmail(),
                         "provider", user.getProvider(),
                         "profileurl", user.getProfileurl(),
+                        "address", user.getAddress() != null ? user.getAddress() : "",
                         "isRegistered", user.getIsRegistered()
                     )
                 ));
@@ -105,17 +106,18 @@ public class UserController {
                 Optional<User> userOptional = appUserRepository.findByProviderAndUserid(jwtDetails.getProvider(), jwtDetails.getSocialId());
                 if (userOptional.isPresent()) {
                     User user = userOptional.get();
-                    return ResponseEntity.ok(Map.of(
-                        "isLoggedIn", true,
-                        "user", Map.of(
-                            "usernum", user.getUsernum(),
-                            "nickname", user.getNickname(),
-                            "email", user.getEmail(),
-                            "provider", user.getProvider(),
-                            "profileurl", user.getProfileurl(),
-                            "isRegistered", user.getIsRegistered()
-                        )
-                    ));
+                                    return ResponseEntity.ok(Map.of(
+                    "isLoggedIn", true,
+                    "user", Map.of(
+                        "usernum", user.getUsernum(),
+                        "nickname", user.getNickname(),
+                        "email", user.getEmail(),
+                        "provider", user.getProvider(),
+                        "profileurl", user.getProfileurl(),
+                        "address", user.getAddress() != null ? user.getAddress() : "",
+                        "isRegistered", user.getIsRegistered()
+                    )
+                ));
                 }
             }
         }
@@ -240,6 +242,7 @@ public class UserController {
                     "email", user.getEmail(),
                     "provider", user.getProvider(),
                     "profileurl", user.getProfileurl(),
+                    "address", user.getAddress() != null ? user.getAddress() : "",
                     "isRegistered", user.getIsRegistered()
                 )
             ));
@@ -715,11 +718,12 @@ public class UserController {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
             // 공개할 정보만 반환 (민감한 정보 제외)
-            return ResponseEntity.ok(Map.of(
-                    "usernum", user.getUsernum(),
-                    "nickname", user.getNickname(),
-                    "profileurl", user.getProfileurl(),
-                    "provider", user.getProvider()
+                        return ResponseEntity.ok(Map.of(
+                "usernum", user.getUsernum(),
+                "nickname", user.getNickname(),
+                "profileurl", user.getProfileurl(),
+                "address", user.getAddress() != null ? user.getAddress() : "",
+                "provider", user.getProvider()
             ));
         } else {
             return ResponseEntity.status(404).build();
